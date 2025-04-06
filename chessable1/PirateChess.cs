@@ -288,7 +288,11 @@ namespace piratechess
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 // Set the default file name
-                saveFileDialog.FileName = $"{_coursename}.pgn";  // Adjust this default filename as needed
+
+                string invalidChars = new string(Path.GetInvalidFileNameChars());
+                string sanitizedFilename = string.Concat(_coursename.Split(invalidChars.ToCharArray()));
+
+                saveFileDialog.FileName = $"{sanitizedFilename}.pgn";  // Adjust this default filename as needed
                 saveFileDialog.Filter = "PGN files (*.pgn)|*.pgn|All files (*.*)|*.*"; // File type filter
 
                 // Show the save file dialog and check if the user selected a file
