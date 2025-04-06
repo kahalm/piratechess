@@ -191,7 +191,7 @@ namespace piratechess
                         textBoxPGN.Text += $"""
                         
                         [Event "{responseChapter.List.Name}"]
-                        [Round "{chapter}.{count}"]
+                        [Round "{chapter:000}.{count:000}"]
                         [White "{line.Name}"]
                         [Black "{responseChapter.List.Title}"]
                         [Result "*"]
