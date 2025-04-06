@@ -371,25 +371,38 @@ namespace piratechess
 
                 if (move.After is not null and not "")
                 {
-                    ResponseMove? responseMove = JsonSerializer.Deserialize<ResponseMove>(move.After, options: Options.GetOptions());
-                    if (responseMove == null || responseMove.Data == null)
+                    ResponseMove? responseMoveAfter = JsonSerializer.Deserialize<ResponseMove>(move.After, options: Options.GetOptions());
+                    if (responseMoveAfter != null && responseMoveAfter.Data != null)
                     {
-                        continue;
+                        move.CommentAfter = string.Join(Environment.NewLine, responseMoveAfter.Data.Select(x => x.CommentAfter).ToList());
                     }
-                    move.Comment = string.Join(Environment.NewLine, responseMove.Data.Select(x => x.Comment).ToList());
+                }
+
+                if (move.Before is not null and not "")
+                {
+                    ResponseMove? responseMoveBefore = JsonSerializer.Deserialize<ResponseMove>(move.Before, options: Options.GetOptions());
+                    if (responseMoveBefore != null && responseMoveBefore.Data != null)
+                    {
+                        move.CommentBefore = string.Join(Environment.NewLine, responseMoveBefore.Data.Select(x => x.CommentBefore).ToList());
+                    }
                 }
             }
             int lastMove = 0;
             foreach (JsonMove move in sortedMoves.Values)
             {
+                if (move.CommentBefore != "")
+                {
+                    pgn += $"{{{move.CommentBefore}}} ";
+                }
+
                 if (lastMove < move.Move)
                 {
                     pgn += $"{move.Move}. ";
                 }
                 pgn += move.San + " ";
-                if (move.Comment != "")
+                if (move.CommentAfter != "")
                 {
-                    pgn += $"{{{move.Comment}}} ";
+                    pgn += $"{{{move.CommentAfter}}} ";
                 }
                 lastMove = move.Move;
             }
@@ -402,7 +415,9 @@ namespace piratechess
         public int Move { get; set; }
         public string San { get; set; } = string.Empty;
         public string After { get; set; } = string.Empty;
-        public string Comment { get; internal set; } = string.Empty;
+        public string Before {  get; set; } = string.Empty;
+        public string CommentAfter { get; internal set; } = string.Empty;
+        public string CommentBefore { get; internal set; } = string.Empty;
     }
 
     public class JsonMoveItem
@@ -417,7 +432,7 @@ namespace piratechess
         public string State { get; set; } = string.Empty;
         public string Key { get; set; } = string.Empty;
         public JsonElement? Val { get; set; } //entweder eine Liste von itemList oder ein string.
-        public string Comment
+        public string CommentAfter
         {
             get
             {
@@ -433,7 +448,45 @@ namespace piratechess
                 else
                 if (Val.Value.ValueKind == JsonValueKind.Array)
                 {
-                    List<string>? innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions())?.Select(x => x.Comment).ToList();
+                    List<string>? innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions())?.Select(x => x.CommentAfter).ToList();
+
+                    comment = string.Join(Environment.NewLine, innerList ?? [""]);
+                }
+                else
+                {
+                    return "";
+                }
+
+                comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
+                comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
+                comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
+                comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
+                comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
+                comment = comment.Replace("<br/>", "").Replace("<br>", "");
+                comment = comment.Replace("</strong>", "").Replace("<strong>", "");
+                comment = comment.Replace("</bold>", "").Replace("<bold>", "");
+                comment = findHtmltags().Replace(comment, "");
+
+                return comment;
+            }
+        }
+        public string CommentBefore
+        {
+            get
+            {
+                string comment = "";
+                if (Val == null)
+                {
+                    return "";
+                }
+                if (Val.Value.ValueKind == JsonValueKind.String)
+                {
+                    comment = Val.ToString() ?? "";
+                }
+                else
+                if (Val.Value.ValueKind == JsonValueKind.Array)
+                {
+                    List<string>? innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions())?.Select(x => x.CommentAfter).ToList();
 
                     comment = string.Join(Environment.NewLine, innerList ?? [""]);
                 }
