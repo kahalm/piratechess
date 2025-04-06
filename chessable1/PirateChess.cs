@@ -10,6 +10,7 @@ namespace piratechess
     {
         private int _cumLines = 0;
         private StringBuilder _pgn = new();
+        private string _coursename = "";
         public PirateChess()
         {
             InitializeComponent();
@@ -40,7 +41,7 @@ namespace piratechess
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             // Write values to INI
-            INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, textBoxBearer.Text, 
+            INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, textBoxBearer.Text,
                 Options.key2, textBoxUid.Text, Options.key3, textBoxBid.Text);
 
             base.OnFormClosed(e);
@@ -267,12 +268,42 @@ namespace piratechess
                         Black = responseChapter.List.Title
                     };
 
+                    _coursename = responseChapter.List.Name;
 
                     GetLine(Options.GetOptions(), pgnHeader);
 
                     if (lines < _cumLines)
                     {
                         break;
+                    }
+                }
+            }
+        }
+
+        private void buttonSavePNG_Click(object sender, EventArgs e)
+        {
+            // Create a SaveFileDialog to allow the user to choose the save location
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                // Set the default file name
+                saveFileDialog.FileName = $"{_coursename}.pgn";  // Adjust this default filename as needed
+                saveFileDialog.Filter = "PGN files (*.pgn)|*.pgn|All files (*.*)|*.*"; // File type filter
+
+                // Show the save file dialog and check if the user selected a file
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // Get the file path chosen by the user
+                    string filePath = saveFileDialog.FileName;
+
+                    try
+                    {
+                        // Write the content of the TextBox to the selected file
+                        File.WriteAllText(filePath, textBoxPGN.Text);
+                        MessageBox.Show("File saved successfully!");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("An error occurred while saving the file: " + ex.Message);
                     }
                 }
             }

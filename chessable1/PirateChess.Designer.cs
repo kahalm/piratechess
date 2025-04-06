@@ -43,12 +43,12 @@
             labelBid = new Label();
             labelDurchlauf = new Label();
             textBoxDurchlauf = new TextBox();
-            buttonTestdaten = new Button();
             label4 = new Label();
             textBoxCurLines = new TextBox();
             buttonFirstTenLines = new Button();
             label5 = new Label();
             textBoxCumulativeLines = new TextBox();
+            buttonSavePNG = new Button();
             SuspendLayout();
             // 
             // buttonParseAll
@@ -169,16 +169,6 @@
             textBoxDurchlauf.TabIndex = 12;
             textBoxDurchlauf.Text = "0";
             // 
-            // buttonTestdaten
-            // 
-            buttonTestdaten.Location = new Point(62, 509);
-            buttonTestdaten.Name = "buttonTestdaten";
-            buttonTestdaten.Size = new Size(292, 29);
-            buttonTestdaten.TabIndex = 14;
-            buttonTestdaten.Text = "Testdaten";
-            buttonTestdaten.UseVisualStyleBackColor = true;
-            buttonTestdaten.Click += ButtonTestdaten_Click;
-            // 
             // label4
             // 
             label4.AutoSize = true;
@@ -200,7 +190,7 @@
             // 
             // buttonFirstTenLines
             // 
-            buttonFirstTenLines.Location = new Point(62, 462);
+            buttonFirstTenLines.Location = new Point(62, 519);
             buttonFirstTenLines.Name = "buttonFirstTenLines";
             buttonFirstTenLines.Size = new Size(292, 29);
             buttonFirstTenLines.TabIndex = 17;
@@ -227,17 +217,27 @@
             textBoxCumulativeLines.TabIndex = 18;
             textBoxCumulativeLines.Text = "0";
             // 
+            // buttonSavePNG
+            // 
+            buttonSavePNG.Location = new Point(799, 380);
+            buttonSavePNG.Name = "buttonSavePNG";
+            buttonSavePNG.Size = new Size(94, 29);
+            buttonSavePNG.TabIndex = 20;
+            buttonSavePNG.Text = "Save";
+            buttonSavePNG.UseVisualStyleBackColor = true;
+            buttonSavePNG.Click += buttonSavePNG_Click;
+            // 
             // PirateChess
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1293, 617);
+            Controls.Add(buttonSavePNG);
             Controls.Add(label5);
             Controls.Add(textBoxCumulativeLines);
             Controls.Add(buttonFirstTenLines);
             Controls.Add(label4);
             Controls.Add(textBoxCurLines);
-            Controls.Add(buttonTestdaten);
             Controls.Add(labelDurchlauf);
             Controls.Add(textBoxDurchlauf);
             Controls.Add(labelBid);
@@ -281,5 +281,6 @@
         private Button buttonFirstTenLines;
         private Label label5;
         private TextBox textBoxCumulativeLines;
+        private Button buttonSavePNG;
     }
 }
