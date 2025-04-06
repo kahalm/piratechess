@@ -11,3 +11,5 @@ Steps to use the program:
 
   Klick "generiere kompletten Kurs" and wait - some slowness is wanted some just happened, don't want to optimize.
   Wait til everything finished, copy content of the Textbox to a Textfile named something.png, import into chessbase & enjoy
+
+Only tested with opening courses - maybe I will look into taktiks/positions in the future
