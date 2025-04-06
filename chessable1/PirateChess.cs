@@ -462,6 +462,7 @@ namespace piratechess
                 comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
                 comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
                 comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
+                comment = comment.Replace("@@HeaderStart@@", "").Replace("@@HeaderEnd@@", "");
                 comment = comment.Replace("<br/>", "").Replace("<br>", "");
                 comment = comment.Replace("</strong>", "").Replace("<strong>", "");
                 comment = comment.Replace("</bold>", "").Replace("<bold>", "");
