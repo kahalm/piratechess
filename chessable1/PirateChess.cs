@@ -114,11 +114,9 @@ namespace piratechess
             request.AddHeader("x-os-name", "Firefox");
             request.AddHeader("x-os-version", "138");
             request.AddHeader("x-device-model", "Windows");
-            request.AddHeader("x-device-id", "S5vQCG2VcFArYKfC9p97YI");
             request.AddHeader("authorization", $"Bearer {bearer}");
             request.AddHeader("alt-used", "www.chessable.com");
             request.AddHeader("connection", "keep-alive");
-            request.AddHeader("cookie", "amp_dfb317=S5vQCG2VcFArYKfC9p97YI.NzkwOTI3..1io2lfd40.1io2lg5uj.3.2.5; _gcl_au=1.1.91946173.1743846357; _ga_SM6G6M7B8T=GS1.1.1743846356.1.1.1743846445.49.0.0; tms_VisitorID=9v7h213gor; tms_wsip=1; _jst_profileid_fb5e9043b672481791ed69e733d9ac1e=9lKei4s9p; _fbp=fb.1.1743846357753.637610792166494840; osano_consentmanager_uuid=bedb2331-845d-4f17-890b-2ec38669c1a0; osano_consentmanager=DsNAdPUtyWA6SAPArZniSu4sUEywMC-Hq-OBJxhYsuc9i-LlZ7IyFWEwomBrPmfzgfw5pJRCaWFEceQg-o4e4m6jXtNCSnSDmi4aCrBhXNGXFEWf_zeyXvhKg5YLwoyb3IARux6pr15tafzSXLgGtlXXhfPWsfbdTo77BA3KSr8JfkU-YYAesASvQuCaf1cxznEo_vl-JEzgJrfI4-uqWlboZPMJDfSL9HgzFnCJhnOQSBe1edMsnNqxyDNlWO-owcvMVfEKVTDCgPINebbMD5GSyQ9In4ai01mu7MfgEuRktMKI4Hyqn2tQJQn6dPXzSraxvw==; osano_consentmanager_expdate=1777023958895; _ga=GA1.2.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _gid=GA1.2.1395078794.1743846358; _gid=GA1.1.1395078794.1743846358; intercom-id-qzot1t7g=0559c744-8324-434e-a78d-f892cca5923a; intercom-session-qzot1t7g=; intercom-device-id-qzot1t7g=b5e29a6e-43b1-4fc4-989c-8b4677b25246; _ga_Z6ZD3CB4HN=GS1.2.1743846376.1.1.1743846444.60.0.0; sec_session_id=aa338c456c1a7de9ddf209741a604371; uidsessid=790927; unamesessid=kahalm; loginstringsessid=d3d8186535da6fde%3A2282e897b33ce4c28234178ae1aa706a; _gat=1");
             request.AddHeader("sec-fetch-dest", "empty");
             request.AddHeader("sec-fetch-mode", "cors");
             request.AddHeader("sec-fetch-site", "same-origin");
