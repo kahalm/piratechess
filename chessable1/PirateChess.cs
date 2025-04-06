@@ -179,6 +179,8 @@ namespace piratechess
                 return;
             }
 
+            _cumLines = 0;
+
             var url = $"https://www.chessable.com/api/v1/getCourse?uid={textBoxUid.Text}&bid={textBoxBid.Text}";
             RestClient client = new(url);
 
