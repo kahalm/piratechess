@@ -222,7 +222,7 @@ namespace piratechess
                     var rand = new Random();
                     System.Threading.Thread.Sleep(rand.Next(500, 1500));
 
-                    if (lines < _cumLines)
+                    if (lines <= _cumLines)
                     {
                         break;
                     }
