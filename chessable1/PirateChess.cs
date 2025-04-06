@@ -116,7 +116,7 @@ namespace piratechess
                 _pgn?.Append($"""
                         
                         [Event "{pgnHeader.Event}"]
-                        [Round "{pgnHeader.Event:000}.{pgnHeader.Subround:000}"]
+                        [Round "{pgnHeader.Round:000}.{pgnHeader.Subround:000}"]
                         [White "{pgnHeader.White}"]
                         [Black "{pgnHeader.Black}"]
                         [FEN "{pgnHeader.FEN}"]
@@ -264,8 +264,8 @@ namespace piratechess
                     var pgnHeader = new pgnInfo
                     {
                         Event = responseChapter.List.Name,
-                        Round = chapter,
-                        Subround = count,
+                        Round = chapter + 1,
+                        Subround = count + 1,
                         White = line.Name,
                         Black = responseChapter.List.Title
                     };
