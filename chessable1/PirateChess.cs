@@ -74,7 +74,7 @@ namespace piratechess
                 Invoke(new Action(() =>
                 {
                     textBoxPGN.Text += pgn;
-                    textBoxCumulativeLines.Text += _cumLines.ToString();
+                    textBoxCumulativeLines.Text = _cumLines.ToString();
                 }));
             }
 
