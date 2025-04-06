@@ -1,9 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using piratechess_lib;
-using RestSharp;
-using JsonSerializer = System.Text.Json.JsonSerializer;
+﻿using piratechess_lib;
 
 namespace piratechess_Winform
 {
@@ -69,7 +64,16 @@ namespace piratechess_Winform
             {
                 var pirate = new PirateChessLib(textBoxUid.Text, textBoxBearer.Text);
 
-               (var pgn, _coursename) = pirate.GetCourse(textBoxUid.Text);
+                pirate.SetChapterCounterEvent(SetChapterCounter);
+                pirate.SetLineCounterEvent(SetLineCounter);
+
+                Invoke(new Action(() =>
+                {
+                    textBoxPGN.Text = "";
+                    textBoxCumulativeLines.Text = "0";
+                }));
+
+                (var pgn, _coursename) = pirate.GetCourse(textBoxUid.Text);
 
 
                 Invoke(new Action(() =>
@@ -83,12 +87,30 @@ namespace piratechess_Winform
             }).Start();
         }
 
+        public void SetChapterCounter(string chapterCounter)
+        {
+            Invoke(new Action(() =>
+            {
+                textBoxDurchlauf.Text = chapterCounter;
+
+            }));
+        }
+
+        public void SetLineCounter(string lineCounter)
+        {
+            Invoke(new Action(() =>
+            {
+                textBoxCumulativeLines.Text = lineCounter;
+
+            }));
+        }
+
         private void ButtonFirstTenLines_Click_1(object sender, EventArgs e)
         {
             new Thread(() =>
             {
                 var pirate = new PirateChessLib(textBoxUid.Text, textBoxBearer.Text);
-               var pgn = pirate.GetCourse(textBoxBid.Text, 10);
+                var pgn = pirate.GetCourse(textBoxBid.Text, 10);
 
 
                 Invoke(new Action(() =>
@@ -97,7 +119,7 @@ namespace piratechess_Winform
                 }));
             }).Start();
         }
- 
+
         private void ButtonSavePNG_Click(object sender, EventArgs e)
         {
             // Create a SaveFileDialog to allow the user to choose the save location

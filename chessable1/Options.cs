@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace piratechess_Winform
+﻿namespace piratechess_Winform
 {
     internal class Options
     {

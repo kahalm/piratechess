@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace piratechess_Winform
 {
@@ -27,7 +23,7 @@ namespace piratechess_Winform
         }
 
         // Method to read string values from an INI file
-        public static Dictionary<string,string> ReadFromINI(string filePath, string section, string key1, string key2, string key3)
+        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3)
         {
             if (!File.Exists(filePath))
             {
