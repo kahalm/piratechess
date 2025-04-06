@@ -7,6 +7,7 @@ namespace piratechess
 {
     public partial class PirateChess : Form
     {
+        private int _cumLines = 0;
         public PirateChess()
         {
             InitializeComponent();
@@ -69,9 +70,11 @@ namespace piratechess
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
                 string? pgn = game?.Game?.GeneratePGN();
 
+                _cumLines++;
                 Invoke(new Action(() =>
                 {
                     textBoxPGN.Text += pgn;
+                    textBoxCumulativeLines.Text += _cumLines.ToString();
                 }));
             }
 
@@ -109,6 +112,7 @@ namespace piratechess
             Invoke(new Action(() =>
             {
                 textBoxPGN.Text = "";
+                textBoxCumulativeLines.Text = _cumLines.ToString();
             }));
             string content = response.Content ?? "";
             if (content != null)
@@ -130,15 +134,20 @@ namespace piratechess
                         textBoxLid.Text = item.Id.ToString();
                     }));
 
-                    GetChapter(Options.GetOptions());
+                    GetChapter(Options.GetOptions(), lines);
                     var rand = new Random();
                     System.Threading.Thread.Sleep(rand.Next(500, 1500));
+
+                    if (lines < _cumLines)
+                    {
+                        break;
+                    }
                 }
             }
         }
 
 
-        private void GetChapter(JsonSerializerOptions caseInvariant)
+        private void GetChapter(JsonSerializerOptions caseInvariant, int lines)
         {
             RestClient client = new($"https://www.chessable.com/api/v1/getList?uid={textBoxUid.Text}&bid={textBoxBid.Text}&lid={textBoxLid.Text}");
             RestRequest request = new("", Method.Get);
@@ -193,20 +202,27 @@ namespace piratechess
 
                     }));
                     GetLine(Options.GetOptions());
+                    if (lines < _cumLines)
+                    {
+                        break;
+                    }
                 }
             }
-
         }
 
         private void ButtonTestdaten_Click(object sender, EventArgs e)
         {
-
             GetLine(Options.GetOptions(), Testdata.Testjson);
         }
 
-        private void textBoxBearer_TextChanged(object sender, EventArgs e)
-        {
 
+        private void buttonFirstTenLines_Click_1(object sender, EventArgs e)
+        {
+            new Thread(() =>
+            {
+                _cumLines = 0;
+                GetCourse(Options.GetOptions(), 10);
+            }).Start();
         }
     }
 

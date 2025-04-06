@@ -47,6 +47,8 @@
             label4 = new Label();
             textBoxCurLines = new TextBox();
             buttonFirstTenLines = new Button();
+            label5 = new Label();
+            textBoxCumulativeLines = new TextBox();
             SuspendLayout();
             // 
             // buttonParseAll
@@ -73,7 +75,6 @@
             textBoxBearer.Name = "textBoxBearer";
             textBoxBearer.Size = new Size(125, 27);
             textBoxBearer.TabIndex = 2;
-            textBoxBearer.TextChanged += textBoxBearer_TextChanged;
             // 
             // label1
             // 
@@ -205,12 +206,34 @@
             buttonFirstTenLines.TabIndex = 17;
             buttonFirstTenLines.Text = "Ersten 10 Lines";
             buttonFirstTenLines.UseVisualStyleBackColor = true;
+            buttonFirstTenLines.Click += buttonFirstTenLines_Click_1;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(50, 273);
+            label5.Name = "label5";
+            label5.Size = new Size(77, 20);
+            label5.TabIndex = 19;
+            label5.Text = "cum. Lines";
+            // 
+            // textBoxCumulativeLines
+            // 
+            textBoxCumulativeLines.AccessibleRole = AccessibleRole.None;
+            textBoxCumulativeLines.Enabled = false;
+            textBoxCumulativeLines.Location = new Point(130, 273);
+            textBoxCumulativeLines.Name = "textBoxCumulativeLines";
+            textBoxCumulativeLines.Size = new Size(125, 27);
+            textBoxCumulativeLines.TabIndex = 18;
+            textBoxCumulativeLines.Text = "0";
             // 
             // PirateChess
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1293, 617);
+            Controls.Add(label5);
+            Controls.Add(textBoxCumulativeLines);
             Controls.Add(buttonFirstTenLines);
             Controls.Add(label4);
             Controls.Add(textBoxCurLines);
@@ -256,5 +279,7 @@
         private Label label4;
         private TextBox textBoxCurLines;
         private Button buttonFirstTenLines;
+        private Label label5;
+        private TextBox textBoxCumulativeLines;
     }
 }
