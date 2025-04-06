@@ -275,7 +275,6 @@
         private Label labelBid;
         private Label labelDurchlauf;
         private TextBox textBoxDurchlauf;
-        private Button buttonTestdaten;
         private Label label4;
         private TextBox textBoxCurLines;
         private Button buttonFirstTenLines;
