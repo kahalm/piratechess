@@ -1,0 +1,44 @@
+name: Build and Release (Windows)
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Repository auschecken
+      uses: actions/checkout@v4
+
+    - name: .NET SDK einrichten
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0'  # Setze hier die gewünschte .NET Version (9.0)
+
+    - name: Abhängigkeiten wiederherstellen
+      run: dotnet restore
+
+    - name: Projekt erstellen
+      run: dotnet build --configuration Release
+
+    - name: Build für Windows 64-bit (Single File)
+      run: dotnet publish chessable1/piratechess.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
+
+    - name: Build für Windows 32-bit (Single File)
+      run: dotnet publish chessable1/piratechess.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
+      
+    - name: Umbenennen der 32-bit Version
+      run: Rename-Item -Path ./publish/win-x86/piratechess.exe -NewName piratechess-win-x86.exe
+
+    - name: Release-Asset erstellen
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./publish/**/*.exe
+
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
