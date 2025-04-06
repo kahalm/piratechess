@@ -59,6 +59,10 @@ namespace piratechess
                 {
                     textBoxPGN.Text = _pgn.ToString();
                 }));
+
+
+                MessageBox.Show("Finished.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.None,
+         MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
             }).Start();
         }
 
@@ -228,9 +232,6 @@ namespace piratechess
                     }
                 }
             }
-
-            MessageBox.Show("Finished.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.None,
-     MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
         }
 
 
