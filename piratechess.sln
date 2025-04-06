@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "piratechess_Winform", "ches
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "piratechess_lib", "piratechess_lib\piratechess_lib.csproj", "{09E52F3A-C19A-43CC-B705-4E62F37A3DA0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "piratechess_maui", "piratechess_maui\piratechess_maui.csproj", "{C0FEE801-26D4-4FA2-A2CC-C65C152583C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{09E52F3A-C19A-43CC-B705-4E62F37A3DA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09E52F3A-C19A-43CC-B705-4E62F37A3DA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09E52F3A-C19A-43CC-B705-4E62F37A3DA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0FEE801-26D4-4FA2-A2CC-C65C152583C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0FEE801-26D4-4FA2-A2CC-C65C152583C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0FEE801-26D4-4FA2-A2CC-C65C152583C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0FEE801-26D4-4FA2-A2CC-C65C152583C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

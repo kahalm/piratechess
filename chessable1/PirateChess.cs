@@ -110,7 +110,7 @@ namespace piratechess_Winform
             new Thread(() =>
             {
                 var pirate = new PirateChessLib(textBoxUid.Text, textBoxBearer.Text);
-                var pgn = pirate.GetCourse(textBoxBid.Text, 10);
+                (var pgn, _coursename) = pirate.GetCourse(textBoxBid.Text, 10);
 
 
                 Invoke(new Action(() =>
