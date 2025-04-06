@@ -134,7 +134,7 @@ namespace piratechess
                         textBoxLid.Text = item.Id.ToString();
                     }));
 
-                    GetChapter(Options.GetOptions(), lines);
+                    GetChapter(Options.GetOptions(), lines, durchlauf);
                     var rand = new Random();
                     System.Threading.Thread.Sleep(rand.Next(500, 1500));
 
@@ -147,7 +147,7 @@ namespace piratechess
         }
 
 
-        private void GetChapter(JsonSerializerOptions caseInvariant, int lines)
+        private void GetChapter(JsonSerializerOptions caseInvariant, int lines, int chapter)
         {
             RestClient client = new($"https://www.chessable.com/api/v1/getList?uid={textBoxUid.Text}&bid={textBoxBid.Text}&lid={textBoxLid.Text}");
             RestRequest request = new("", Method.Get);
@@ -191,9 +191,9 @@ namespace piratechess
                         textBoxPGN.Text += $"""
                         
                         [Event "{responseChapter.List.Name}"]
+                        [Round "{chapter}.{count}"]
                         [White "{line.Name}"]
                         [Black "{responseChapter.List.Title}"]
-
                         [Result "*"]
 
 
@@ -356,17 +356,19 @@ namespace piratechess
                 comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
                 comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
                 comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
+                comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
                 comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
                 comment = comment.Replace("<br/>", "").Replace("<br>", "");
                 comment = comment.Replace("</strong>", "").Replace("<strong>", "");
                 comment = comment.Replace("</bold>", "").Replace("<bold>", "");
-                comment = findHref().Replace(comment, "\\1");
+                comment = findHtmltags().Replace(comment, "");
 
                 return comment;
             }
         }
 
-        [GeneratedRegex("<a .*>(.*)</a>")]
-        private static partial Regex findHref();
+        [GeneratedRegex("<[^>]*>")]
+        private static partial Regex findHtmltags();
+
     }
 }
