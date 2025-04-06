@@ -1,3 +1,6 @@
+Use at your own risk!
+Don't know if it is against any TOS, but be warned if you get banned. Use only for personal backups.
+
 Project to extract chessable courses.
 
 As I want to get real ownership of bought stuff (and import the courses into chessbase) I created a small programm to extract courses to pgn.
