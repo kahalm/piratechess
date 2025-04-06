@@ -62,8 +62,5 @@ namespace piratechess_maui
                 LabelLineCounter.Text = obj;
             });
         }
-
-
     }
-
 }
