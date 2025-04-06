@@ -18,12 +18,21 @@
             <Entry x:Name="EntryBid"
                    Placeholder="enter bid"
                    />
+            <Label x:Name="LabelChapterCounter"/>
+            <Label x:Name="LabelLineCounter"/>
+            
             <Button
                 x:Name="FirstTenLines"
                 Text="First 10 lines" 
                 SemanticProperties.Hint="Generates the first 10 lines of a given course"
                 HorizontalOptions="Fill" 
-                Clicked="OnButtonClicked" />
+                Clicked="OnButtonFirstTenLinesClicked" />
+            <Button
+                x:Name="GenerateCourse"
+                Text="Generate whole course" 
+                SemanticProperties.Hint="Generates the a given course"
+                HorizontalOptions="Fill" 
+                Clicked="OnButtonGenerateCourseClicked" />
 
             <Editor x:Name="EditorPgn"
                 Placeholder="Here will be the PGN of your Course"
