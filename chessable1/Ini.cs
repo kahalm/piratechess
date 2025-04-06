@@ -1,0 +1,77 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace piratechess
+{
+
+    class INIFileHandler
+    {
+        // Method to write string values to an INI file
+        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3)
+        {
+            StringBuilder iniContent = new StringBuilder();
+
+            // Add the section header
+            iniContent.AppendLine($"[{section}]");
+
+            // Add key-value pairs
+            iniContent.AppendLine($"{key1}={value1}");
+            iniContent.AppendLine($"{key2}={value2}");
+            iniContent.AppendLine($"{key3}={value3}");
+
+            // Write to the file
+            File.WriteAllText(filePath, iniContent.ToString());
+        }
+
+        // Method to read string values from an INI file
+        public static Dictionary<string,string> ReadFromINI(string filePath, string section, string key1, string key2, string key3)
+        {
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine("INI file does not exist.");
+                return [];
+            }
+
+            string[] lines = File.ReadAllLines(filePath);
+            string currentSection = "";
+            string value1 = "", value2 = "", value3 = "";
+
+            foreach (var line in lines)
+            {
+                // Ignore comments and empty lines
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
+                    continue;
+
+                // Check for section headers
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    currentSection = line.Trim('[', ']');
+                }
+
+                // If we're in the right section, check for key-value pairs
+                if (currentSection == section)
+                {
+                    if (line.StartsWith(key1))
+                        value1 = line.Split('=')[1];
+                    else if (line.StartsWith(key2))
+                        value2 = line.Split('=')[1];
+                    else if (line.StartsWith(key3))
+                        value3 = line.Split('=')[1];
+                }
+            }
+
+            // Display read values
+            Dictionary<string, string> dict = new()
+            {
+                { key1, value1 },
+                { key2, value2 },
+                { key3, value3 }
+            };
+
+            return dict;
+        }
+    }
+}

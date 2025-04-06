@@ -6,13 +6,44 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace piratechess
 {
-    public partial class PirateChess : Form
+    public partial class PirateChess : Form, IDisposable
     {
         private int _cumLines = 0;
         private StringBuilder _pgn = new();
         public PirateChess()
         {
             InitializeComponent();
+
+            string? value1, value2, value3;
+
+            // Read values from INI
+            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3);
+            if (!settings.TryGetValue(Options.key1, out value1))
+            {
+                value1 = "";
+            }
+            if (!settings.TryGetValue(Options.key2, out value2))
+            {
+                value2 = "";
+            }
+            if (!settings.TryGetValue(Options.key3, out value3))
+            {
+                value3 = "";
+            }
+
+
+            textBoxBearer.Text = value1;
+            textBoxUid.Text = value2;
+            textBoxBid.Text = value3;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            // Write values to INI
+            INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, textBoxBearer.Text, 
+                Options.key2, textBoxUid.Text, Options.key3, textBoxBid.Text);
+
+            base.OnFormClosed(e);
         }
 
         private void Button1_Click(object sender, EventArgs e)
@@ -129,6 +160,24 @@ namespace piratechess
         }
         private void GetCourse(JsonSerializerOptions caseInvariant, int lines = 10000)
         {
+            if (textBoxBearer.Text.Length < 3000)
+            {
+                MessageBox.Show("bearer missing");
+                return;
+            }
+
+            if (textBoxUid.Text.Length == 0)
+            {
+                MessageBox.Show("uid (userid) missing");
+                return;
+            }
+
+            if (textBoxBid.Text.Length == 0)
+            {
+                MessageBox.Show("bid (Courseid) missing");
+                return;
+            }
+
             var url = $"https://www.chessable.com/api/v1/getCourse?uid={textBoxUid.Text}&bid={textBoxBid.Text}";
             RestClient client = new(url);
 
@@ -176,6 +225,9 @@ namespace piratechess
                     }
                 }
             }
+
+            MessageBox.Show("Finished.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.None,
+     MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
         }
 
 
