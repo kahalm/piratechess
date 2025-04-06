@@ -57,7 +57,7 @@
             buttonParseAll.Name = "buttonParseAll";
             buttonParseAll.Size = new Size(292, 29);
             buttonParseAll.TabIndex = 0;
-            buttonParseAll.Text = "Generiere kompletten Kurs";
+            buttonParseAll.Text = "complete course";
             buttonParseAll.UseVisualStyleBackColor = true;
             buttonParseAll.Click += Button1_Click;
             // 
@@ -156,9 +156,9 @@
             labelDurchlauf.AutoSize = true;
             labelDurchlauf.Location = new Point(50, 205);
             labelDurchlauf.Name = "labelDurchlauf";
-            labelDurchlauf.Size = new Size(71, 20);
+            labelDurchlauf.Size = new Size(59, 20);
             labelDurchlauf.TabIndex = 13;
-            labelDurchlauf.Text = "durchlauf";
+            labelDurchlauf.Text = "chapter";
             // 
             // textBoxDurchlauf
             // 
@@ -174,9 +174,9 @@
             label4.AutoSize = true;
             label4.Location = new Point(50, 240);
             label4.Name = "label4";
-            label4.Size = new Size(74, 20);
+            label4.Size = new Size(39, 20);
             label4.TabIndex = 16;
-            label4.Text = "curr. Lines";
+            label4.Text = "lines";
             // 
             // textBoxCurLines
             // 
@@ -194,7 +194,7 @@
             buttonFirstTenLines.Name = "buttonFirstTenLines";
             buttonFirstTenLines.Size = new Size(292, 29);
             buttonFirstTenLines.TabIndex = 17;
-            buttonFirstTenLines.Text = "Ersten 10 Lines";
+            buttonFirstTenLines.Text = "First 10 lines";
             buttonFirstTenLines.UseVisualStyleBackColor = true;
             buttonFirstTenLines.Click += buttonFirstTenLines_Click_1;
             // 
@@ -203,9 +203,9 @@
             label5.AutoSize = true;
             label5.Location = new Point(50, 273);
             label5.Name = "label5";
-            label5.Size = new Size(77, 20);
+            label5.Size = new Size(74, 20);
             label5.TabIndex = 19;
-            label5.Text = "cum. Lines";
+            label5.Text = "total lines";
             // 
             // textBoxCumulativeLines
             // 
