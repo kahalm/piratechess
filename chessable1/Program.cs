@@ -1,4 +1,4 @@
-namespace piratechess
+namespace piratechess_Winform
 {
     internal static class Program
     {

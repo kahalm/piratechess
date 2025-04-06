@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace piratechess
+namespace piratechess_Winform
 {
 
     class INIFileHandler
@@ -12,7 +12,7 @@ namespace piratechess
         // Method to write string values to an INI file
         public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3)
         {
-            StringBuilder iniContent = new StringBuilder();
+            StringBuilder iniContent = new();
 
             // Add the section header
             iniContent.AppendLine($"[{section}]");
@@ -42,11 +42,11 @@ namespace piratechess
             foreach (var line in lines)
             {
                 // Ignore comments and empty lines
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith(';'))
                     continue;
 
                 // Check for section headers
-                if (line.StartsWith("[") && line.EndsWith("]"))
+                if (line.StartsWith('[') && line.EndsWith(']'))
                 {
                     currentSection = line.Trim('[', ']');
                 }

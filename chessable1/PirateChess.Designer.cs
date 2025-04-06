@@ -1,4 +1,4 @@
-﻿namespace piratechess
+﻿namespace piratechess_Winform
 {
     partial class PirateChess
     {
@@ -49,7 +49,6 @@
             label5 = new Label();
             textBoxCumulativeLines = new TextBox();
             buttonSavePNG = new Button();
-            SuspendLayout();
             // 
             // buttonParseAll
             // 
@@ -196,7 +195,7 @@
             buttonFirstTenLines.TabIndex = 17;
             buttonFirstTenLines.Text = "First 10 lines";
             buttonFirstTenLines.UseVisualStyleBackColor = true;
-            buttonFirstTenLines.Click += buttonFirstTenLines_Click_1;
+            buttonFirstTenLines.Click += ButtonFirstTenLines_Click_1;
             // 
             // label5
             // 
@@ -225,7 +224,7 @@
             buttonSavePNG.TabIndex = 20;
             buttonSavePNG.Text = "Save";
             buttonSavePNG.UseVisualStyleBackColor = true;
-            buttonSavePNG.Click += buttonSavePNG_Click;
+            buttonSavePNG.Click += ButtonSavePNG_Click;
             // 
             // PirateChess
             // 
