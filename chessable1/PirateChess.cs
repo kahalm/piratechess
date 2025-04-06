@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using RestSharp;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -8,6 +9,7 @@ namespace piratechess
     public partial class PirateChess : Form
     {
         private int _cumLines = 0;
+        private StringBuilder _pgn = new();
         public PirateChess()
         {
             InitializeComponent();
@@ -15,48 +17,54 @@ namespace piratechess
 
         private void Button1_Click(object sender, EventArgs e)
         {
+            _pgn = new StringBuilder();
             new Thread(() =>
             {
                 GetCourse(Options.GetOptions());
+
+
+                Invoke(new Action(() =>
+                {
+                    textBoxPGN.Text = _pgn.ToString();
+                }));
             }).Start();
         }
 
-        private void ButtonFirstTenLines_Click(object sender, EventArgs e)
+        private void ButtonTestdaten_Click(object sender, EventArgs e)
         {
+            _pgn = new StringBuilder();
+            var pgnHeader = new pgnInfo();
+            GetLine(Options.GetOptions(), pgnHeader, Testdata.Testjson);
+        }
+
+
+        private void buttonFirstTenLines_Click_1(object sender, EventArgs e)
+        {
+            _pgn = new StringBuilder();
             new Thread(() =>
             {
-                GetCourse(Options.GetOptions(), lines: 10);
+                _cumLines = 0;
+                GetCourse(Options.GetOptions(), 10);
+
+
+                Invoke(new Action(() =>
+                {
+                    textBoxPGN.Text = _pgn.ToString();
+                }));
             }).Start();
         }
 
-        private void GetLine(JsonSerializerOptions caseInvariant, string json = "")
+        private void GetLine(JsonSerializerOptions caseInvariant, pgnInfo pgnHeader, string json = "")
         {
             string content = "";
             if (json == "")
             {
                 RestClient client = new($"https://www.chessable.com/api/v1/getGame?lng=en&uid={textBoxUid.Text}&oid={textBoxOid.Text}");
-                RestRequest request = new("", Method.Get);
-                _ = request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0");
-                _ = request.AddHeader("accept", "application/json, text/plain, */*");
-                _ = request.AddHeader("accept-language", "en");
-                _ = request.AddHeader("accept-encoding", "gzip, deflate, br, zstd");
-                _ = request.AddHeader("referer", "https://www.chessable.com/variation/36729850/");
-                _ = request.AddHeader("platform", "Web");
-                _ = request.AddHeader("x-os-name", "Firefox");
-                _ = request.AddHeader("x-os-version", "138");
-                _ = request.AddHeader("x-device-model", "Windows");
-                _ = request.AddHeader("x-device-id", "S5vQCG2VcFArYKfC9p97YI");
-                _ = request.AddHeader("authorization", $"Bearer {textBoxBearer.Text}");
-                _ = request.AddHeader("alt-used", "www.chessable.com");
-                _ = request.AddHeader("connection", "keep-alive");
-                _ = request.AddHeader("cookie", "amp_dfb317=S5vQCG2VcFArYKfC9p97YI.NzkwOTI3..1io2lfd40.1io2lg5uj.3.2.5; _gcl_au=1.1.91946173.1743846357; _ga_SM6G6M7B8T=GS1.1.1743846356.1.1.1743846445.49.0.0; tms_VisitorID=9v7h213gor; tms_wsip=1; _jst_profileid_fb5e9043b672481791ed69e733d9ac1e=9lKei4s9p; _fbp=fb.1.1743846357753.637610792166494840; osano_consentmanager_uuid=bedb2331-845d-4f17-890b-2ec38669c1a0; osano_consentmanager=DsNAdPUtyWA6SAPArZniSu4sUEywMC-Hq-OBJxhYsuc9i-LlZ7IyFWEwomBrPmfzgfw5pJRCaWFEceQg-o4e4m6jXtNCSnSDmi4aCrBhXNGXFEWf_zeyXvhKg5YLwoyb3IARux6pr15tafzSXLgGtlXXhfPWsfbdTo77BA3KSr8JfkU-YYAesASvQuCaf1cxznEo_vl-JEzgJrfI4-uqWlboZPMJDfSL9HgzFnCJhnOQSBe1edMsnNqxyDNlWO-owcvMVfEKVTDCgPINebbMD5GSyQ9In4ai01mu7MfgEuRktMKI4Hyqn2tQJQn6dPXzSraxvw==; osano_consentmanager_expdate=1777023958895; _ga=GA1.2.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _gid=GA1.2.1395078794.1743846358; _gid=GA1.1.1395078794.1743846358; intercom-id-qzot1t7g=0559c744-8324-434e-a78d-f892cca5923a; intercom-session-qzot1t7g=; intercom-device-id-qzot1t7g=b5e29a6e-43b1-4fc4-989c-8b4677b25246; _ga_Z6ZD3CB4HN=GS1.2.1743846376.1.1.1743846444.60.0.0; sec_session_id=aa338c456c1a7de9ddf209741a604371; uidsessid=790927; unamesessid=kahalm; loginstringsessid=d3d8186535da6fde%3A2282e897b33ce4c28234178ae1aa706a; _gat=1");
-                _ = request.AddHeader("sec-fetch-dest", "empty");
-                _ = request.AddHeader("sec-fetch-mode", "cors");
-                _ = request.AddHeader("sec-fetch-site", "same-origin");
-                _ = request.AddHeader("priority", "u=0");
-                _ = request.AddHeader("te", "trailers");
-                _ = request.AddHeader("pragma", "no-cache");
-                _ = request.AddHeader("cache-control", "no-cache");
+
+
+                var bearer = textBoxBearer.Text;
+                var request = generateRequest(bearer);
+
                 RestResponse response = client.Execute(request);
                 content = response.Content ?? "";
             }
@@ -70,45 +78,66 @@ namespace piratechess
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
                 string? pgn = game?.Game?.GeneratePGN();
 
+                pgnHeader.FEN = game?.Game.Initial ?? "";
                 _cumLines++;
+
+                _pgn?.Append($"""
+                        
+                        [Event "{pgnHeader.Event}"]
+                        [Round "{pgnHeader.Event:000}.{pgnHeader.Subround:000}"]
+                        [White "{pgnHeader.White}"]
+                        [Black "{pgnHeader.Black}"]
+                        [FEN "{pgnHeader.FEN}"]
+                        [Result "*"]
+
+                        {pgn}
+
+
+                        """);
+
                 Invoke(new Action(() =>
                 {
-                    textBoxPGN.Text += pgn;
                     textBoxCumulativeLines.Text = _cumLines.ToString();
                 }));
             }
 
         }
 
+        private RestRequest generateRequest(string bearer)
+        {
+            RestRequest request = new("", Method.Get);
+            request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0");
+            request.AddHeader("accept", "application/json, text/plain, */*");
+            request.AddHeader("accept-language", "en");
+            request.AddHeader("accept-encoding", "gzip, deflate, br, zstd");
+            request.AddHeader("platform", "Web");
+            request.AddHeader("x-os-name", "Firefox");
+            request.AddHeader("x-os-version", "138");
+            request.AddHeader("x-device-model", "Windows");
+            request.AddHeader("x-device-id", "S5vQCG2VcFArYKfC9p97YI");
+            request.AddHeader("authorization", $"Bearer {bearer}");
+            request.AddHeader("alt-used", "www.chessable.com");
+            request.AddHeader("connection", "keep-alive");
+            request.AddHeader("cookie", "amp_dfb317=S5vQCG2VcFArYKfC9p97YI.NzkwOTI3..1io2lfd40.1io2lg5uj.3.2.5; _gcl_au=1.1.91946173.1743846357; _ga_SM6G6M7B8T=GS1.1.1743846356.1.1.1743846445.49.0.0; tms_VisitorID=9v7h213gor; tms_wsip=1; _jst_profileid_fb5e9043b672481791ed69e733d9ac1e=9lKei4s9p; _fbp=fb.1.1743846357753.637610792166494840; osano_consentmanager_uuid=bedb2331-845d-4f17-890b-2ec38669c1a0; osano_consentmanager=DsNAdPUtyWA6SAPArZniSu4sUEywMC-Hq-OBJxhYsuc9i-LlZ7IyFWEwomBrPmfzgfw5pJRCaWFEceQg-o4e4m6jXtNCSnSDmi4aCrBhXNGXFEWf_zeyXvhKg5YLwoyb3IARux6pr15tafzSXLgGtlXXhfPWsfbdTo77BA3KSr8JfkU-YYAesASvQuCaf1cxznEo_vl-JEzgJrfI4-uqWlboZPMJDfSL9HgzFnCJhnOQSBe1edMsnNqxyDNlWO-owcvMVfEKVTDCgPINebbMD5GSyQ9In4ai01mu7MfgEuRktMKI4Hyqn2tQJQn6dPXzSraxvw==; osano_consentmanager_expdate=1777023958895; _ga=GA1.2.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _gid=GA1.2.1395078794.1743846358; _gid=GA1.1.1395078794.1743846358; intercom-id-qzot1t7g=0559c744-8324-434e-a78d-f892cca5923a; intercom-session-qzot1t7g=; intercom-device-id-qzot1t7g=b5e29a6e-43b1-4fc4-989c-8b4677b25246; _ga_Z6ZD3CB4HN=GS1.2.1743846376.1.1.1743846444.60.0.0; sec_session_id=aa338c456c1a7de9ddf209741a604371; uidsessid=790927; unamesessid=kahalm; loginstringsessid=d3d8186535da6fde%3A2282e897b33ce4c28234178ae1aa706a; _gat=1");
+            request.AddHeader("sec-fetch-dest", "empty");
+            request.AddHeader("sec-fetch-mode", "cors");
+            request.AddHeader("sec-fetch-site", "same-origin");
+            request.AddHeader("priority", "u=0");
+            request.AddHeader("te", "trailers");
+            request.AddHeader("pragma", "no-cache");
+            request.AddHeader("cache-control", "no-cache");
 
+            return request;
+        }
         private void GetCourse(JsonSerializerOptions caseInvariant, int lines = 10000)
         {
-            RestClient client = new($"https://www.chessable.com/api/v1/getCourse?uid={textBoxUid.Text}&bid={textBoxBid.Text}");
-            RestRequest request = new("", Method.Get);
-            _ = request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0");
-            _ = request.AddHeader("accept", "application/json, text/plain, */*");
-            _ = request.AddHeader("accept-language", "en");
-            _ = request.AddHeader("accept-encoding", "gzip, deflate, br, zstd");
-            _ = request.AddHeader("referer", "https://www.chessable.com/variation/36729850/");
-            _ = request.AddHeader("platform", "Web");
-            _ = request.AddHeader("x-os-name", "Firefox");
-            _ = request.AddHeader("x-os-version", "138");
-            _ = request.AddHeader("x-device-model", "Windows");
-            _ = request.AddHeader("x-device-id", "S5vQCG2VcFArYKfC9p97YI");
-            _ = request.AddHeader("authorization", $"Bearer {textBoxBearer.Text}");
-            _ = request.AddHeader("alt-used", "www.chessable.com");
-            _ = request.AddHeader("connection", "keep-alive");
-            _ = request.AddHeader("cookie", "amp_dfb317=S5vQCG2VcFArYKfC9p97YI.NzkwOTI3..1io2lfd40.1io2lg5uj.3.2.5; _gcl_au=1.1.91946173.1743846357; _ga_SM6G6M7B8T=GS1.1.1743846356.1.1.1743846445.49.0.0; tms_VisitorID=9v7h213gor; tms_wsip=1; _jst_profileid_fb5e9043b672481791ed69e733d9ac1e=9lKei4s9p; _fbp=fb.1.1743846357753.637610792166494840; osano_consentmanager_uuid=bedb2331-845d-4f17-890b-2ec38669c1a0; osano_consentmanager=DsNAdPUtyWA6SAPArZniSu4sUEywMC-Hq-OBJxhYsuc9i-LlZ7IyFWEwomBrPmfzgfw5pJRCaWFEceQg-o4e4m6jXtNCSnSDmi4aCrBhXNGXFEWf_zeyXvhKg5YLwoyb3IARux6pr15tafzSXLgGtlXXhfPWsfbdTo77BA3KSr8JfkU-YYAesASvQuCaf1cxznEo_vl-JEzgJrfI4-uqWlboZPMJDfSL9HgzFnCJhnOQSBe1edMsnNqxyDNlWO-owcvMVfEKVTDCgPINebbMD5GSyQ9In4ai01mu7MfgEuRktMKI4Hyqn2tQJQn6dPXzSraxvw==; osano_consentmanager_expdate=1777023958895; _ga=GA1.2.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _gid=GA1.2.1395078794.1743846358; _gid=GA1.1.1395078794.1743846358; intercom-id-qzot1t7g=0559c744-8324-434e-a78d-f892cca5923a; intercom-session-qzot1t7g=; intercom-device-id-qzot1t7g=b5e29a6e-43b1-4fc4-989c-8b4677b25246; _ga_Z6ZD3CB4HN=GS1.2.1743846376.1.1.1743846444.60.0.0; sec_session_id=aa338c456c1a7de9ddf209741a604371; uidsessid=790927; unamesessid=kahalm; loginstringsessid=d3d8186535da6fde%3A2282e897b33ce4c28234178ae1aa706a; _gat=1");
-            _ = request.AddHeader("sec-fetch-dest", "empty");
-            _ = request.AddHeader("sec-fetch-mode", "cors");
-            _ = request.AddHeader("sec-fetch-site", "same-origin");
-            _ = request.AddHeader("priority", "u=0");
-            _ = request.AddHeader("te", "trailers");
-            _ = request.AddHeader("pragma", "no-cache");
-            _ = request.AddHeader("cache-control", "no-cache");
-            RestResponse response = client.Execute(request);
+            var url = $"https://www.chessable.com/api/v1/getCourse?uid={textBoxUid.Text}&bid={textBoxBid.Text}";
+            RestClient client = new(url);
 
+            var bearer = textBoxBearer.Text;
+            var request = generateRequest(bearer);
 
+            var response = client.Execute(request);
             Invoke(new Action(() =>
             {
                 textBoxPGN.Text = "";
@@ -117,7 +146,12 @@ namespace piratechess
             string content = response.Content ?? "";
             if (content != null)
             {
-                ResponseCourse? course = JsonSerializer.Deserialize<ResponseCourse>(content, options: caseInvariant);
+                ResponseCourse? course = null;
+                try
+                {
+                    course = JsonSerializer.Deserialize<ResponseCourse>(content, options: caseInvariant);
+                }
+                catch { }
 
                 if (course == null || course.Course == null)
                 {
@@ -150,28 +184,10 @@ namespace piratechess
         private void GetChapter(JsonSerializerOptions caseInvariant, int lines, int chapter)
         {
             RestClient client = new($"https://www.chessable.com/api/v1/getList?uid={textBoxUid.Text}&bid={textBoxBid.Text}&lid={textBoxLid.Text}");
-            RestRequest request = new("", Method.Get);
-            _ = request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0");
-            _ = request.AddHeader("accept", "application/json, text/plain, */*");
-            _ = request.AddHeader("accept-language", "en");
-            _ = request.AddHeader("accept-encoding", "gzip, deflate, br, zstd");
-            _ = request.AddHeader("referer", "https://www.chessable.com/variation/36729850/");
-            _ = request.AddHeader("platform", "Web");
-            _ = request.AddHeader("x-os-name", "Firefox");
-            _ = request.AddHeader("x-os-version", "138");
-            _ = request.AddHeader("x-device-model", "Windows");
-            _ = request.AddHeader("x-device-id", "S5vQCG2VcFArYKfC9p97YI");
-            _ = request.AddHeader("authorization", $"Bearer {textBoxBearer.Text}");
-            _ = request.AddHeader("alt-used", "www.chessable.com");
-            _ = request.AddHeader("connection", "keep-alive");
-            _ = request.AddHeader("cookie", "amp_dfb317=S5vQCG2VcFArYKfC9p97YI.NzkwOTI3..1io2lfd40.1io2lg5uj.3.2.5; _gcl_au=1.1.91946173.1743846357; _ga_SM6G6M7B8T=GS1.1.1743846356.1.1.1743846445.49.0.0; tms_VisitorID=9v7h213gor; tms_wsip=1; _jst_profileid_fb5e9043b672481791ed69e733d9ac1e=9lKei4s9p; _fbp=fb.1.1743846357753.637610792166494840; osano_consentmanager_uuid=bedb2331-845d-4f17-890b-2ec38669c1a0; osano_consentmanager=DsNAdPUtyWA6SAPArZniSu4sUEywMC-Hq-OBJxhYsuc9i-LlZ7IyFWEwomBrPmfzgfw5pJRCaWFEceQg-o4e4m6jXtNCSnSDmi4aCrBhXNGXFEWf_zeyXvhKg5YLwoyb3IARux6pr15tafzSXLgGtlXXhfPWsfbdTo77BA3KSr8JfkU-YYAesASvQuCaf1cxznEo_vl-JEzgJrfI4-uqWlboZPMJDfSL9HgzFnCJhnOQSBe1edMsnNqxyDNlWO-owcvMVfEKVTDCgPINebbMD5GSyQ9In4ai01mu7MfgEuRktMKI4Hyqn2tQJQn6dPXzSraxvw==; osano_consentmanager_expdate=1777023958895; _ga=GA1.2.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _ga=GA1.1.1818527451.1743846358; _gid=GA1.2.1395078794.1743846358; _gid=GA1.1.1395078794.1743846358; intercom-id-qzot1t7g=0559c744-8324-434e-a78d-f892cca5923a; intercom-session-qzot1t7g=; intercom-device-id-qzot1t7g=b5e29a6e-43b1-4fc4-989c-8b4677b25246; _ga_Z6ZD3CB4HN=GS1.2.1743846376.1.1.1743846444.60.0.0; sec_session_id=aa338c456c1a7de9ddf209741a604371; uidsessid=790927; unamesessid=kahalm; loginstringsessid=d3d8186535da6fde%3A2282e897b33ce4c28234178ae1aa706a; _gat=1");
-            _ = request.AddHeader("sec-fetch-dest", "empty");
-            _ = request.AddHeader("sec-fetch-mode", "cors");
-            _ = request.AddHeader("sec-fetch-site", "same-origin");
-            _ = request.AddHeader("priority", "u=0");
-            _ = request.AddHeader("te", "trailers");
-            _ = request.AddHeader("pragma", "no-cache");
-            _ = request.AddHeader("cache-control", "no-cache");
+
+            var bearer = textBoxBearer.Text;
+            var request = generateRequest(bearer);
+
             RestResponse response = client.Execute(request);
 
 
@@ -188,41 +204,28 @@ namespace piratechess
                     Invoke(new Action(() =>
                     {
                         textBoxCurLines.Text = $"{count} / {responseChapter.List.Data.Count}";
-                        textBoxPGN.Text += $"""
-                        
-                        [Event "{responseChapter.List.Name}"]
-                        [Round "{chapter:000}.{count:000}"]
-                        [White "{line.Name}"]
-                        [Black "{responseChapter.List.Title}"]
-                        [Result "*"]
-
-
-                        """;
                         textBoxOid.Text = line.Id.ToString();
 
                     }));
-                    GetLine(Options.GetOptions());
+
+                    var pgnHeader = new pgnInfo
+                    {
+                        Event = responseChapter.List.Name,
+                        Round = chapter,
+                        Subround = count,
+                        White = line.Name,
+                        Black = responseChapter.List.Title
+                    };
+
+
+                    GetLine(Options.GetOptions(), pgnHeader);
+
                     if (lines < _cumLines)
                     {
                         break;
                     }
                 }
             }
-        }
-
-        private void ButtonTestdaten_Click(object sender, EventArgs e)
-        {
-            GetLine(Options.GetOptions(), Testdata.Testjson);
-        }
-
-
-        private void buttonFirstTenLines_Click_1(object sender, EventArgs e)
-        {
-            new Thread(() =>
-            {
-                _cumLines = 0;
-                GetCourse(Options.GetOptions(), 10);
-            }).Start();
         }
     }
 
@@ -268,11 +271,9 @@ namespace piratechess
     {
         public bool Owned { get; set; }
         public List<JsonMove> Data { get; set; } = [];
+        public string Initial { get; set; } = string.Empty;
         public string GeneratePGN()
         {
-            // 1. Parse äußeres JSON
-
-
             string pgn = "";
             SortedList<int, JsonMove> sortedMoves = [];
             Data ??= [];
