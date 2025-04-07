@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "piratechess_Winform", "chessable1\piratechess_Winform.csproj", "{1D4AC731-FD53-4C71-B3BA-D596EDBBF477}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "piratechess_Winform", "piratechess_winform\piratechess_Winform.csproj", "{1D4AC731-FD53-4C71-B3BA-D596EDBBF477}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "piratechess_lib", "piratechess_lib\piratechess_lib.csproj", "{09E52F3A-C19A-43CC-B705-4E62F37A3DA0}"
 EndProject
