@@ -1,4 +1,4 @@
-name: Build All C# Projects in Repo
+name: Build Maui for Win
 
 on:
   workflow_dispatch:
@@ -7,10 +7,8 @@ jobs:
   build:
     strategy:
       fail-fast: false
-      matrix:
-        os: [windows-latest, macos-15]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
     - name: Checkout code
@@ -28,68 +26,5 @@ jobs:
       run: sudo xcode-select -s /Applications/Xcode_16.2.app
       if: runner.os == 'macOS'
 
-    - name: Find and build all C# projects
-      run: |
-        $failedProjectCount=0
-        $skippedProjectCount=0
-        $excluded_projects_file="./eng/excluded_projects_" + "${{ runner.os }}".ToLower() + ".txt"
-        $excluded_projects=@()
-
-        $jobSummaryFile=$env:GITHUB_STEP_SUMMARY
-
-        if (Test-Path $excluded_projects_file) {
-            $excluded_projects = Get-Content -Path $excluded_projects_file | Where-Object { $_ -notmatch "^\s*#" -and $_ -match "\S" }
-        }
-
-        Write-Output "# .NET MAUI Sample Apps Build Status (${{ runner.os }})" | Out-File -FilePath $jobSummaryFile -Append
-        Write-Output "| Project | Build Status |" | Out-File -FilePath $jobSummaryFile -Append
-        Write-Output "|---|---|" | Out-File -FilePath $jobSummaryFile -Append
-
-        Get-ChildItem -Path . -Filter *.csproj -File -Recurse | ForEach-Object {
-            $csproj = $_.FullName
-            $relativePath = (Resolve-Path -Path $csproj -Relative).Replace("\", "/")
-
-            # Check if the project is in the exclusion list
-            if ($excluded_projects -contains $relativePath) {
-                Write-Output "::notice:: Skipping build for excluded project: $relativePath"
-                Write-Output "| $csproj | Skipped |" | Out-File -FilePath $jobSummaryFile -Append
-
-                $skippedProjectCount++
-            }
-            else {
-                Write-Output "::group:: Building $csproj"
-
-                dotnet build $csproj
-
-                if ($LASTEXITCODE -gt 0) {
-                    Write-Output "::error:: Build failed for $csproj"
-                    Write-Output "| $relativePath | :x: |" | Out-File -FilePath $jobSummaryFile -Append
-
-                    $failedProjectCount++
-                }
-                else {
-                    Write-Output "Build succeeded for $csproj"
-                    Write-Output "| $relativePath | :white_check_mark: |" | Out-File -FilePath $jobSummaryFile -Append
-                }
-
-                $proj_dir = [System.IO.Path]::GetDirectoryName($csproj)
-                Write-Output "Cleaning up bin & obj in $proj_dir"
-                
-                try {
-                  Get-ChildItem -Path $proj_dir -Directory -Recurse -Include bin,obj | Remove-Item -Recurse -Force
-                } catch {
-                  Write-Output "::warning:: Failed to clean up bin & obj in $proj_dir"  
-                }
-
-                Write-Output "::endgroup::"
-            }
-        }
-
-        if ($failedProjectCount -gt 0) {
-            Write-Output "" | Out-File -FilePath $jobSummaryFile -Append
-            Write-Output "# Failed builds: $failedProjectCount" | Out-File -FilePath $jobSummaryFile -Append
-            Write-Output "# Skipped builds: $skippedProjectCount" | Out-File -FilePath $jobSummaryFile -Append
-
-            exit $failedProjectCount
-        }
-      shell: powershell
+    - name: build
+      run: dotnet build ./piratechess_maui/piratechess_maui.csproj
