@@ -90,7 +90,7 @@ jobs:
   # Optional: Clean up after the build
   clean-up:
     runs-on: windows-latest
-    needs: [build-winforms,   build-maui-win, build-android]  # Ensure cleanup runs after both build jobs
+    needs: [build-winforms,   build-maui-win]  # Ensure cleanup runs after both build jobs
 
     steps:
     - name: Clean up build artifacts
