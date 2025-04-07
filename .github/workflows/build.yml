@@ -9,11 +9,13 @@ on:
       config:
         description: 'Build-Konfiguration'
         required: true
-        default: 'Release'
+        default:  'all'  # Default to running all jobs
 
 jobs:
   build-winforms:
     runs-on: windows-latest
+
+    if: ${{ github.event.inputs.job == 'winforms' || github.event.inputs.job == 'all' }}    
 
     steps:
     - name: Repository auschecken
@@ -51,6 +53,8 @@ jobs:
   build-maui-win:
     runs-on: windows-latest  # MAUI build now runs on Windows
 
+    if: ${{ github.event.inputs.job == 'maui' || github.event.inputs.job == 'all' }}
+    
     steps:
     - name: Repository auschecken
       uses: actions/checkout@v4
@@ -87,7 +91,9 @@ jobs:
         
   build-android:
     runs-on: windows-latest  # Use Windows environment for MAUI
-  
+
+  if: ${{ github.event.inputs.job == 'android' || github.event.inputs.job == 'all' }}
+      
     steps:
     - name: Repository auschecken
       uses: actions/checkout@v4
