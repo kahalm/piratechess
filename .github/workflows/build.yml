@@ -4,6 +4,10 @@ on:
   release:
     types:
       - published
+    inputs:
+        description: 'Which job to run'
+        required: true
+        default:  'all'  # Default to running all jobs
   workflow_dispatch:
     inputs:
       job:
