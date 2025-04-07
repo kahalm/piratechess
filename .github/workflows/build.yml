@@ -116,8 +116,8 @@ jobs:
       run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64
     
     - name: Publish MAUI project for Android (APK)
-      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release --output ./publish/maui/android --self-contained false -r android-arm64 /p:PublishSingleFile=true /p:DebugType=none
-    
+      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release --output ./publish/maui/android -r android-arm64 /p:DebugType=none
+
     - name: Umbenennen der Android Version (APK)
       run: Rename-Item -Path ./publish/maui/android/piratechess_maui.apk -NewName piratechess_maui-android-arm64.apk
     
