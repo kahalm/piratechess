@@ -20,7 +20,7 @@ jobs:build-maui-win:
     - name: .NET SDK einrichten für MAUI
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0'  # Setze hier die gewünschte .NET Version (9.0)
+        dotnet-version: '8.0'  # Setze hier die gewünschte .NET Version (9.0)
 
     - name: Install MAUI workloads
       run: dotnet workload install maui
