@@ -25,58 +25,15 @@ jobs:
       run: dotnet build ./piratechess_winform/piratechess_winform.csproj --configuration Release
 
     - name: Publish WinForms project 64-bit (Single File)
-      run: dotnet publish chessable1/piratechess_winform.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
 
     - name: Publish WinForms projects 32-bit (Single File)
-      run: dotnet publish chessable1/piratechess_winform.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
       
     - name: Umbenennen der 32-bit Version
-      run: Rename-Item -Path ./publish/win-x86/piratechess.exe -NewName piratechess-win-x86.exe
+      run: Rename-Item -Path ./publish/win-x86/piratechess_winform.exe -NewName piratechess_winform-win-x86.exe
 
     - name: Release-Asset erstellen
       uses: softprops/action-gh-release@v1
       with:
         files: ./publish/**/*.exe
-
-build_maui_android:
-    runs-on: ubuntu-latest  # Runs on Ubuntu, as we need Android SDK for MAUI
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up .NET SDK for MAUI
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '6.0'  # Ensure you're using a compatible .NET version for MAUI
-
-    - name: Install Android dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openjdk-11-jdk
-        sudo apt-get install -y unzip
-        curl -s https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -o android-tools.zip
-        unzip android-tools.zip -d $HOME/Android
-        export ANDROID_SDK_ROOT=$HOME/Android/cmdline-tools
-        $ANDROID_SDK_ROOT/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --update
-        $ANDROID_SDK_ROOT/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "build-tools;30.0.3" "platforms;android-30"
-
-    - name: Restore dependencies for MAUI
-      run: dotnet restore ./piratechess_maui/piratechess_maui.csproj
-
-    - name: Build MAUI project for Android
-      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64
-
-    - name: Publish MAUI project for Android
-      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64 --self-contained true --output ./publish/maui-android
-
-    - name: Upload MAUI APK artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: piratechess-maui-android
-        path: ./publish/maui-android
-
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
