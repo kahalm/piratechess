@@ -43,8 +43,11 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: ./publish/**/*.exe
+      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
 
-
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
   build-maui:
     runs-on: windows-latest  # MAUI build now runs on Windows
 
@@ -95,6 +98,10 @@ jobs:
         files: |
           ./publish/maui/win-x64/piratechess_maui-win-x64.exe
           ./publish/maui/android/piratechess_maui-android-arm64.apk
+      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
+ 
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Optional: Clean up after the build
   clean-up:
