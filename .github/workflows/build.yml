@@ -95,16 +95,13 @@ jobs:
     - name: .NET SDK einrichten für MAUI
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '7.0'  # Set the desired .NET version (7.0 for stable MAUI support)
+        dotnet-version: '9.0'  # Set the desired .NET version (7.0 for stable MAUI support)
     
     - name: Install MAUI workloads
       run: dotnet workload install maui android
     
     - name: Set up Android SDK
-      uses: actions/setup-android@v2
-      with:
-        api-level: '30'  # Set the desired API level for Android (adjust if needed)
-        build-tools-version: '30.0.3'
+      uses: android-actions/setup-android@v3
     
     - name: Restore dependencies for MAUI
       run: dotnet restore ./piratechess_maui/piratechess_maui.csproj
