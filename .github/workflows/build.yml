@@ -6,8 +6,8 @@ on:
       - published
   workflow_dispatch:
     inputs:
-      config:
-        description: 'Build-Konfiguration'
+      job:
+        description: 'Which job to run'
         required: true
         default:  'all'  # Default to running all jobs
 
