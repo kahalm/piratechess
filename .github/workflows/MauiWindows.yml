@@ -27,7 +27,7 @@ jobs:
       run: dotnet workload install maui
 
     - name: Build MAUI project for Windows
-      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r win-x64
+      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release
 
     - name: Publish MAUI project for Windows (Single File)
       run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release --output ./publish/maui/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none
