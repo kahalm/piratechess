@@ -86,46 +86,6 @@ jobs:
  
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                
-  build-android:
-    runs-on: windows-latest  # Use Windows environment for MAUI
-
-    if: ${{ github.event.inputs.job == 'android' || github.event.inputs.job == 'all' }}
-      
-    steps:
-    - name: Repository auschecken
-      uses: actions/checkout@v4
-    
-    - name: .NET SDK einrichten für MAUI
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0'  # Set the desired .NET version (7.0 for stable MAUI support)
-    
-    - name: Install MAUI workloads
-      run: dotnet workload install maui android
-    
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
-    
-    - name: Restore dependencies for MAUI
-      run: dotnet restore ./piratechess_maui/piratechess_maui.csproj
-    
-    - name: Build MAUI project for Android
-      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64
-    
-    - name: Publish MAUI project for Android (APK)
-      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release --output ./publish/maui/android -r android-arm64 /p:DebugType=none
-
-    - name: Umbenennen der Android Version (APK)
-      run: Rename-Item -Path ./publish/maui/android/piratechess_maui.apk -NewName piratechess_maui-android-arm64.apk
-    
-    - name: Release-Asset erstellen für Android
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ./publish/maui/android/piratechess_maui-android-arm64.apk
-      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Optional: Clean up after the build
   clean-up:
