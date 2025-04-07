@@ -31,13 +31,13 @@ jobs:
       run: dotnet build --configuration Release
 
     - name: Build für Windows 64-bit (Single File)
-      run: dotnet publish chessable1/piratechess.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
 
     - name: Build für Windows 32-bit (Single File)
-      run: dotnet publish chessable1/piratechess.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
       
     - name: Umbenennen der 32-bit Version
-      run: Rename-Item -Path ./publish/win-x86/piratechess.exe -NewName piratechess-win-x86.exe
+      run: Rename-Item -Path ./publish/win-x86/piratechess_winform.exe -NewName piratechess_winform-win-x86.exe
 
     - name: Release-Asset erstellen
       uses: softprops/action-gh-release@v1
