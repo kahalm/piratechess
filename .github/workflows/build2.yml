@@ -1,7 +1,12 @@
 name: TestMauiWindows
 
 on:
-  workflow_dispatch:   
+  workflow_dispatch: 
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: true
+        default:  'all'  # Default to running all jobs  
 
 jobs:
   build-maui-win:
