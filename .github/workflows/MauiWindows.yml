@@ -8,7 +8,8 @@ on:
         required: true
         default:  'all'  # Default to running all jobs  
 
-jobs:build-maui-win:
+jobs:
+  build-maui-win:
     runs-on: windows-latest  # MAUI build now runs on Windows
 
     if: ${{ github.event.inputs.job == 'maui' || github.event.inputs.job == 'all' }}
