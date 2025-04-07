@@ -26,9 +26,6 @@ jobs:
     - name: Install MAUI workloads
       run: dotnet workload install maui
 
-    - name: Restore dependencies for MAUI
-      run: dotnet restore ./piratechess_maui/piratechess_maui.csproj
-
     - name: Build MAUI project for Windows
       run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r win-x64
 
