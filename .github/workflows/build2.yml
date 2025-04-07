@@ -1,81 +1,45 @@
-name: Test
+name: TestMauiWindows
 
 on:
-  release:
-    types:
-      - published
+  workflow_dispatch:   
 
 jobs:
-  build-winforms:
-    runs-on: windows-latest
+  build-maui-win:
+    runs-on: windows-latest  # MAUI build now runs on Windows
 
+    if: ${{ github.event.inputs.job == 'maui' || github.event.inputs.job == 'all' }}
+    
     steps:
     - name: Repository auschecken
       uses: actions/checkout@v4
 
-    - name: .NET SDK einrichten für Winform
+    - name: .NET SDK einrichten für MAUI
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0'  # Setze hier die gewünschte .NET Version (9.0)
 
-    - name: Restore dependencies for WinForms
-      run: dotnet restore ./piratechess_winform/piratechess_winform.csproj
-
-    - name: Build WinForms project
-      run: dotnet build ./piratechess_winform/piratechess_winform.csproj --configuration Release
-
-    - name: Publish WinForms project 64-bit (Single File)
-      run: dotnet publish chessable1/piratechess_winform.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
-
-    - name: Publish WinForms projects 32-bit (Single File)
-      run: dotnet publish chessable1/piratechess_winform.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
-      
-    - name: Umbenennen der 32-bit Version
-      run: Rename-Item -Path ./publish/win-x86/piratechess.exe -NewName piratechess-win-x86.exe
-
-    - name: Release-Asset erstellen
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ./publish/**/*.exe
-
-build_maui_android:
-    runs-on: ubuntu-latest  # Runs on Ubuntu, as we need Android SDK for MAUI
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up .NET SDK for MAUI
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '6.0'  # Ensure you're using a compatible .NET version for MAUI
-
-    - name: Install Android dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openjdk-11-jdk
-        sudo apt-get install -y unzip
-        curl -s https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -o android-tools.zip
-        unzip android-tools.zip -d $HOME/Android
-        export ANDROID_SDK_ROOT=$HOME/Android/cmdline-tools
-        $ANDROID_SDK_ROOT/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --update
-        $ANDROID_SDK_ROOT/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "build-tools;30.0.3" "platforms;android-30"
+    - name: Install MAUI workloads
+      run: dotnet workload install maui
 
     - name: Restore dependencies for MAUI
       run: dotnet restore ./piratechess_maui/piratechess_maui.csproj
 
-    - name: Build MAUI project for Android
-      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64
+    - name: Build MAUI project for Windows
+      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r win-x64
 
-    - name: Publish MAUI project for Android
-      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64 --self-contained true --output ./publish/maui-android
+    - name: Publish MAUI project for Windows (Single File)
+      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release --output ./publish/maui/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none
 
-    - name: Upload MAUI APK artifact
-      uses: actions/upload-artifact@v3
+    - name: Umbenennen der MAUI Windows Version
+      run: Rename-Item -Path ./publish/maui/win-x64/piratechess_maui.exe -NewName piratechess_maui-win-x64.exe
+
+    - name: Release-Asset erstellen für MAUI
+      uses: softprops/action-gh-release@v1
       with:
-        name: piratechess-maui-android
-        path: ./publish/maui-android
-
+        files: 
+          ./publish/maui/win-x64/piratechess_maui-win-x64.exe
+      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
+ 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
