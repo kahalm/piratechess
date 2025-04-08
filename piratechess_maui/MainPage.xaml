@@ -8,19 +8,30 @@
             Padding="30,0"
             Spacing="25">
             <Entry x:Name="EntryBearer"
-                   Placeholder="enter bearer"
+                   Placeholder="enter email"
                    />
 
             <Entry x:Name="EntryUid"
-                   Placeholder="enter uid"
-                   />
-
-            <Entry x:Name="EntryBid"
-                   Placeholder="enter bid"
+                   Placeholder="enter password"
                    />
             <Label x:Name="LabelChapterCounter"/>
             <Label x:Name="LabelLineCounter"/>
-            
+            <Button
+                x:Name="ButtonLogin"
+                Text="Login" 
+                SemanticProperties.Hint="Login"
+                HorizontalOptions="Fill" 
+                Clicked="OnButtonLoginClicked" />
+            <Button
+                x:Name="ButtonLoadChapter"
+                Text="Load Chapters" 
+                SemanticProperties.Hint="Loads all chapters"
+                HorizontalOptions="Fill" 
+                Clicked="OnButtonLoadChapterClicked" />
+
+            <Picker x:Name="myPicker"
+                ItemDisplayBinding="{Binding Value}" />
+
             <Button
                 x:Name="FirstTenLines"
                 Text="First 10 lines" 

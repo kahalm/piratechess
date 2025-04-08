@@ -4,6 +4,7 @@ namespace piratechess_maui
 {
     public partial class MainPage : ContentPage
     {
+        private readonly PirateChessLib _pirate = new();
         public MainPage()
         {
             InitializeComponent();
@@ -11,28 +12,39 @@ namespace piratechess_maui
 
         private void OnButtonFirstTenLinesClicked(object sender, EventArgs e)
         {
+            GenerateLines(10);
+        }
+        private void OnButtonLoginClicked(object sender, EventArgs e)
+        {
+            _pirate.Login(EntryBearer.Text, EntryUid.Text);
+        }
+        private void OnButtonLoadChapterClicked(object sender, EventArgs e)
+        {
+            var items = _pirate.GetChapters();
 
-            var pirate = new PirateChessLib(EntryUid.Text, EntryBearer.Text);
-            (var pgn, _) = pirate.GetCourse(EntryBid.Text, 10);
+            myPicker.ItemsSource = items.ToList();
+        }
 
-            EditorPgn.Text = pgn;
+        private void GenerateLines(int maxLines = 10000)
+        {
+            var selected = (KeyValuePair<string, string>)myPicker.SelectedItem;
+            _pirate.SetChapterCounterEvent(ChapterCounter);
+            _pirate.SetLineCounterEvent(LineCounter);
+
+            new Thread(() =>
+            {
+                (var pgn, _) = _pirate.GetCourse(selected.Key, maxLines);
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    EditorPgn.Text = pgn;
+                });
+            }).Start();
         }
 
         private void OnButtonGenerateCourseClicked(object sender, EventArgs e)
         {
-
-            var pirate = new PirateChessLib(EntryUid.Text, EntryBearer.Text);
-            pirate.SetChapterCounterEvent(ChapterCounter);
-            pirate.SetLineCounterEvent(LineCounter);
-
-
-
-            new Thread(() =>
-            {
-                (var pgn, _) = pirate.GetCourse(EntryBid.Text);
-
-                EditorPgn.Text = pgn;
-            }).Start();
+            GenerateLines();
         }
 
         private void LineCounter(string obj)
