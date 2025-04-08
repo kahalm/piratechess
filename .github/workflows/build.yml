@@ -94,4 +94,11 @@ jobs:
 
     steps:
     - name: Clean up build artifacts
-      run: Remove-Item -Recurse -Force ./publish
+      shell: pwsh
+      run: |
+        if (Test-Path ./publish) {
+          Remove-Item -Recurse -Force ./publish
+          Write-Host "Publish folder cleaned up."
+        } else {
+          Write-Host "No publish folder to clean up."
+        }
