@@ -1,52 +1,65 @@
-name: TestMauiAndroid
+name: Test Maui Android
 
 on:
-  workflow_dispatch: 
+  release:
+    types:
+      - published
+  workflow_dispatch:
     inputs:
       job:
         description: 'Which job to run'
         required: true
-        default:  'all'  # Default to running all jobs  
+        default:  'all'  # Default to running all jobs
 
 jobs:
-  build-android:
-    runs-on: windows-latest  # Use Windows environment for MAUI
+  build-maui-win:
+    runs-on: windows-latest  # MAUI build now runs on Windows
 
-    if: ${{ github.event.inputs.job == 'android' || github.event.inputs.job == 'all' }}
-      
+    if: ${{ github.event_name == 'release' || (github.event.inputs.job == 'maui' || github.event.inputs.job == 'all') }}
+    
     steps:
     - name: Repository auschecken
       uses: actions/checkout@v4
-    
+
     - name: .NET SDK einrichten für MAUI
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0'  # Set the desired .NET version (7.0 for stable MAUI support)
-    
-    - name: Install MAUI workloads
-      run: dotnet workload install maui android
-    
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
-    
-    - name: Restore dependencies for MAUI
-      run: dotnet restore ./piratechess_maui/piratechess_maui.csproj
-    
-    - name: Build MAUI project for Android
-      run: dotnet build ./piratechess_maui/piratechess_maui.csproj --configuration Release -r android-arm64
-    
-    - name: Publish MAUI project for Android (APK)
-      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj --configuration Release --output ./publish/maui/android -r android-arm64 /p:DebugType=none
+        dotnet-version: '9.0'  # Setze hier die gewünschte .NET Version (9.0)
 
-    - name: Umbenennen der Android Version (APK)
-      run: Rename-Item -Path ./publish/maui/android/piratechess_maui.apk -NewName piratechess_maui-android-arm64.apk
-    
-    - name: Release-Asset erstellen für Android
+    - name: Install MAUI workloads
+      run: dotnet workload install maui
+
+    - name: Build MAUI project for Windows
+      run: dotnet build ./piratechess_maui/piratechess_maui.csproj
+
+    - name: Publish MAUI project for Windows (Single File)
+      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-windows10.0.19041.0 --output ./publish/maui/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none
+
+    - name: Umbenennen der MAUI Windows Version
+      run: Rename-Item -Path ./publish/maui/win-x64/piratechess_maui.exe -NewName piratechess_maui-win-x64.exe
+
+    - name: Release-Asset erstellen für MAUI
       uses: softprops/action-gh-release@v1
       with:
-        files: ./publish/maui/android/piratechess_maui-android-arm64.apk
+        files: 
+          ./publish/maui/win-x64/piratechess_maui-win-x64.exe
       if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
+ 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Optional: Clean up after the build
+  clean-up:
+    runs-on: windows-latest
+    needs: [build-maui-win]  # Ensure cleanup runs after both build jobs
 
+    steps:
+    - name: Clean up build artifacts
+      shell: pwsh
+      run: |
+        if (Test-Path ./publish) {
+          Remove-Item -Recurse -Force ./publish
+          Write-Host "Publish folder cleaned up."
+        } else {
+          Write-Host "No publish folder to clean up."
+        }
