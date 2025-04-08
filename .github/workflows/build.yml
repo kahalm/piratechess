@@ -87,6 +87,70 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+        name: Test Maui Android
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: true
+        default:  'all'  # Default to running all jobs
+
+jobs:
+  build-maui-android:
+    runs-on: windows-latest  # MAUI build now runs on Windows
+
+    if: ${{ github.event_name == 'release' || (github.event.inputs.job == 'maui' || github.event.inputs.job == 'all') }}
+    
+    steps:
+    - name: Repository auschecken
+      uses: actions/checkout@v4
+
+    - name: .NET SDK einrichten für MAUI
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0'  # Setze hier die gewünschte .NET Version (9.0)
+
+    - name: Install MAUI workloads
+      run: dotnet workload install maui
+
+    - name: Build MAUI project for Windows
+      run: dotnet build ./piratechess_maui/piratechess_maui.csproj
+
+    - name: Publish MAUI project for Windows (Single File)
+      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-android35.0 --output ./publish/maui/android --self-contained false -p:PackageFormat=Apk
+
+    - name: Release-Asset erstellen für MAUI
+      uses: softprops/action-gh-release@v1
+      with:
+        files: 
+          ./publish/maui/android/*.apk
+      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
+ 
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Optional: Clean up after the build
+  clean-up:
+    runs-on: windows-latest
+    needs: [build-maui-win]  # Ensure cleanup runs after both build jobs
+
+    steps:
+    - name: Clean up build artifacts
+      shell: pwsh
+      run: |
+        if (Test-Path ./publish) {
+          Remove-Item -Recurse -Force ./publish
+          Write-Host "Publish folder cleaned up."
+        } else {
+          Write-Host "No publish folder to clean up."
+        }
+
+
   # Optional: Clean up after the build
   clean-up:
     runs-on: windows-latest
