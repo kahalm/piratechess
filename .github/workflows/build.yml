@@ -89,18 +89,6 @@ jobs:
 
         name: Test Maui Android
 
-on:
-  release:
-    types:
-      - published
-  workflow_dispatch:
-    inputs:
-      job:
-        description: 'Which job to run'
-        required: true
-        default:  'all'  # Default to running all jobs
-
-jobs:
   build-maui-android:
     runs-on: windows-latest  # MAUI build now runs on Windows
 
@@ -137,24 +125,7 @@ jobs:
   # Optional: Clean up after the build
   clean-up:
     runs-on: windows-latest
-    needs: [build-maui-win]  # Ensure cleanup runs after both build jobs
-
-    steps:
-    - name: Clean up build artifacts
-      shell: pwsh
-      run: |
-        if (Test-Path ./publish) {
-          Remove-Item -Recurse -Force ./publish
-          Write-Host "Publish folder cleaned up."
-        } else {
-          Write-Host "No publish folder to clean up."
-        }
-
-
-  # Optional: Clean up after the build
-  clean-up:
-    runs-on: windows-latest
-    needs: [build-winforms,   build-maui-win]  # Ensure cleanup runs after both build jobs
+    needs: [build-winforms, build-maui-win, build-maui-android]  # Ensure cleanup runs after both build jobs
 
     steps:
     - name: Clean up build artifacts
