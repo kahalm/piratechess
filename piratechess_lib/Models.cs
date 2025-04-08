@@ -144,11 +144,11 @@ namespace piratechess_lib
                     return "";
                 }
 
-                return replaceCommentStuff(comment);
+                return ReplaceCommentStuff(comment);
             }
         }
 
-        private string replaceCommentStuff(string comment)
+        private static string ReplaceCommentStuff(string comment)
         {
             comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
             comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
@@ -189,7 +189,7 @@ namespace piratechess_lib
                     return "";
                 }
 
-                return replaceCommentStuff(comment);
+                return ReplaceCommentStuff(comment);
             }
         }
 
