@@ -31,16 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PirateChess));
             buttonParseAll = new Button();
             textBoxPGN = new TextBox();
-            textBoxBearer = new TextBox();
-            label1 = new Label();
-            label2 = new Label();
-            label3 = new Label();
-            textBoxUid = new TextBox();
-            textBoxOid = new TextBox();
-            textBoxLid = new TextBox();
-            textBoxBid = new TextBox();
-            labelLid = new Label();
-            labelBid = new Label();
             labelDurchlauf = new Label();
             textBoxDurchlauf = new TextBox();
             label4 = new Label();
@@ -49,12 +39,23 @@
             label5 = new Label();
             textBoxCumulativeLines = new TextBox();
             buttonSavePNG = new Button();
+            textBoxPwd = new TextBox();
+            labelPwd = new Label();
+            labelEmail = new Label();
+            textBoxEmail = new TextBox();
+            buttonLogin = new Button();
+            radioButtonLogin = new RadioButton();
+            radioButtonBearer = new RadioButton();
+            buttonLoadChapters = new Button();
+            comboBoxChapters = new ComboBox();
+            SuspendLayout();
             // 
             // buttonParseAll
             // 
-            buttonParseAll.Location = new Point(62, 554);
+            buttonParseAll.Enabled = false;
+            buttonParseAll.Location = new Point(62, 555);
             buttonParseAll.Name = "buttonParseAll";
-            buttonParseAll.Size = new Size(292, 29);
+            buttonParseAll.Size = new Size(293, 29);
             buttonParseAll.TabIndex = 0;
             buttonParseAll.Text = "complete course";
             buttonParseAll.UseVisualStyleBackColor = true;
@@ -62,98 +63,16 @@
             // 
             // textBoxPGN
             // 
-            textBoxPGN.Location = new Point(799, 93);
+            textBoxPGN.Location = new Point(676, 56);
             textBoxPGN.Multiline = true;
             textBoxPGN.Name = "textBoxPGN";
             textBoxPGN.Size = new Size(309, 268);
             textBoxPGN.TabIndex = 1;
             // 
-            // textBoxBearer
-            // 
-            textBoxBearer.Location = new Point(130, 30);
-            textBoxBearer.Name = "textBoxBearer";
-            textBoxBearer.Size = new Size(125, 27);
-            textBoxBearer.TabIndex = 2;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(50, 30);
-            label1.Name = "label1";
-            label1.Size = new Size(52, 20);
-            label1.TabIndex = 3;
-            label1.Text = "bearer";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(50, 65);
-            label2.Name = "label2";
-            label2.Size = new Size(30, 20);
-            label2.TabIndex = 4;
-            label2.Text = "uid";
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(50, 135);
-            label3.Name = "label3";
-            label3.Size = new Size(31, 20);
-            label3.TabIndex = 5;
-            label3.Text = "oid";
-            // 
-            // textBoxUid
-            // 
-            textBoxUid.Location = new Point(130, 65);
-            textBoxUid.Name = "textBoxUid";
-            textBoxUid.Size = new Size(125, 27);
-            textBoxUid.TabIndex = 6;
-            // 
-            // textBoxOid
-            // 
-            textBoxOid.Enabled = false;
-            textBoxOid.Location = new Point(130, 135);
-            textBoxOid.Name = "textBoxOid";
-            textBoxOid.Size = new Size(125, 27);
-            textBoxOid.TabIndex = 7;
-            // 
-            // textBoxLid
-            // 
-            textBoxLid.Enabled = false;
-            textBoxLid.Location = new Point(130, 170);
-            textBoxLid.Name = "textBoxLid";
-            textBoxLid.Size = new Size(125, 27);
-            textBoxLid.TabIndex = 8;
-            // 
-            // textBoxBid
-            // 
-            textBoxBid.Location = new Point(130, 100);
-            textBoxBid.Name = "textBoxBid";
-            textBoxBid.Size = new Size(125, 27);
-            textBoxBid.TabIndex = 9;
-            // 
-            // labelLid
-            // 
-            labelLid.AutoSize = true;
-            labelLid.Location = new Point(50, 170);
-            labelLid.Name = "labelLid";
-            labelLid.Size = new Size(26, 20);
-            labelLid.TabIndex = 10;
-            labelLid.Text = "lid";
-            // 
-            // labelBid
-            // 
-            labelBid.AutoSize = true;
-            labelBid.Location = new Point(50, 100);
-            labelBid.Name = "labelBid";
-            labelBid.Size = new Size(31, 20);
-            labelBid.TabIndex = 11;
-            labelBid.Text = "bid";
-            // 
             // labelDurchlauf
             // 
             labelDurchlauf.AutoSize = true;
-            labelDurchlauf.Location = new Point(50, 205);
+            labelDurchlauf.Location = new Point(46, 269);
             labelDurchlauf.Name = "labelDurchlauf";
             labelDurchlauf.Size = new Size(59, 20);
             labelDurchlauf.TabIndex = 13;
@@ -162,7 +81,7 @@
             // textBoxDurchlauf
             // 
             textBoxDurchlauf.Enabled = false;
-            textBoxDurchlauf.Location = new Point(130, 205);
+            textBoxDurchlauf.Location = new Point(126, 269);
             textBoxDurchlauf.Name = "textBoxDurchlauf";
             textBoxDurchlauf.Size = new Size(125, 27);
             textBoxDurchlauf.TabIndex = 12;
@@ -171,7 +90,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(50, 240);
+            label4.Location = new Point(46, 304);
             label4.Name = "label4";
             label4.Size = new Size(39, 20);
             label4.TabIndex = 16;
@@ -181,7 +100,7 @@
             // 
             textBoxCurLines.AccessibleRole = AccessibleRole.None;
             textBoxCurLines.Enabled = false;
-            textBoxCurLines.Location = new Point(130, 240);
+            textBoxCurLines.Location = new Point(126, 304);
             textBoxCurLines.Name = "textBoxCurLines";
             textBoxCurLines.Size = new Size(125, 27);
             textBoxCurLines.TabIndex = 15;
@@ -189,9 +108,10 @@
             // 
             // buttonFirstTenLines
             // 
+            buttonFirstTenLines.Enabled = false;
             buttonFirstTenLines.Location = new Point(62, 519);
             buttonFirstTenLines.Name = "buttonFirstTenLines";
-            buttonFirstTenLines.Size = new Size(292, 29);
+            buttonFirstTenLines.Size = new Size(293, 29);
             buttonFirstTenLines.TabIndex = 17;
             buttonFirstTenLines.Text = "First 10 lines";
             buttonFirstTenLines.UseVisualStyleBackColor = true;
@@ -200,7 +120,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(50, 273);
+            label5.Location = new Point(46, 337);
             label5.Name = "label5";
             label5.Size = new Size(74, 20);
             label5.TabIndex = 19;
@@ -210,7 +130,7 @@
             // 
             textBoxCumulativeLines.AccessibleRole = AccessibleRole.None;
             textBoxCumulativeLines.Enabled = false;
-            textBoxCumulativeLines.Location = new Point(130, 273);
+            textBoxCumulativeLines.Location = new Point(126, 337);
             textBoxCumulativeLines.Name = "textBoxCumulativeLines";
             textBoxCumulativeLines.Size = new Size(125, 27);
             textBoxCumulativeLines.TabIndex = 18;
@@ -226,11 +146,108 @@
             buttonSavePNG.UseVisualStyleBackColor = true;
             buttonSavePNG.Click += ButtonSavePNG_Click;
             // 
+            // textBoxPwd
+            // 
+            textBoxPwd.Location = new Point(126, 177);
+            textBoxPwd.Name = "textBoxPwd";
+            textBoxPwd.Size = new Size(125, 27);
+            textBoxPwd.TabIndex = 24;
+            // 
+            // labelPwd
+            // 
+            labelPwd.AutoSize = true;
+            labelPwd.Location = new Point(46, 177);
+            labelPwd.Name = "labelPwd";
+            labelPwd.Size = new Size(70, 20);
+            labelPwd.TabIndex = 23;
+            labelPwd.Text = "Password";
+            // 
+            // labelEmail
+            // 
+            labelEmail.AutoSize = true;
+            labelEmail.Location = new Point(46, 141);
+            labelEmail.Name = "labelEmail";
+            labelEmail.Size = new Size(46, 20);
+            labelEmail.TabIndex = 22;
+            labelEmail.Text = "Email";
+            // 
+            // textBoxEmail
+            // 
+            textBoxEmail.Location = new Point(126, 141);
+            textBoxEmail.Name = "textBoxEmail";
+            textBoxEmail.Size = new Size(125, 27);
+            textBoxEmail.TabIndex = 21;
+            // 
+            // buttonLogin
+            // 
+            buttonLogin.Location = new Point(62, 423);
+            buttonLogin.Name = "buttonLogin";
+            buttonLogin.Size = new Size(293, 29);
+            buttonLogin.TabIndex = 25;
+            buttonLogin.Text = "Login";
+            buttonLogin.UseVisualStyleBackColor = true;
+            buttonLogin.Click += ButtonLogin_Click;
+            // 
+            // radioButtonLogin
+            // 
+            radioButtonLogin.AutoSize = true;
+            radioButtonLogin.Checked = true;
+            radioButtonLogin.Location = new Point(62, 37);
+            radioButtonLogin.Margin = new Padding(3, 4, 3, 4);
+            radioButtonLogin.Name = "radioButtonLogin";
+            radioButtonLogin.Size = new Size(67, 24);
+            radioButtonLogin.TabIndex = 26;
+            radioButtonLogin.TabStop = true;
+            radioButtonLogin.Text = "Login";
+            radioButtonLogin.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonBearer
+            // 
+            radioButtonBearer.AutoSize = true;
+            radioButtonBearer.Location = new Point(176, 37);
+            radioButtonBearer.Margin = new Padding(3, 4, 3, 4);
+            radioButtonBearer.Name = "radioButtonBearer";
+            radioButtonBearer.Size = new Size(73, 24);
+            radioButtonBearer.TabIndex = 27;
+            radioButtonBearer.Text = "Bearer";
+            radioButtonBearer.UseVisualStyleBackColor = true;
+            radioButtonBearer.CheckedChanged += RadioButtonBearer_CheckedChanged;
+            // 
+            // buttonLoadChapters
+            // 
+            buttonLoadChapters.Enabled = false;
+            buttonLoadChapters.Location = new Point(62, 457);
+            buttonLoadChapters.Name = "buttonLoadChapters";
+            buttonLoadChapters.Size = new Size(293, 29);
+            buttonLoadChapters.TabIndex = 28;
+            buttonLoadChapters.Text = "fill Chapters";
+            buttonLoadChapters.UseVisualStyleBackColor = true;
+            buttonLoadChapters.Click += ButtonLoadChapters_Click;
+            // 
+            // comboBoxChapters
+            // 
+            comboBoxChapters.FormattingEnabled = true;
+            comboBoxChapters.Location = new Point(46, 221);
+            comboBoxChapters.Margin = new Padding(3, 4, 3, 4);
+            comboBoxChapters.Name = "comboBoxChapters";
+            comboBoxChapters.Size = new Size(499, 28);
+            comboBoxChapters.TabIndex = 30;
+            comboBoxChapters.SelectedIndexChanged += ComboBoxChapters_SelectedIndexChanged;
+            // 
             // PirateChess
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1293, 617);
+            Controls.Add(comboBoxChapters);
+            Controls.Add(buttonLoadChapters);
+            Controls.Add(radioButtonBearer);
+            Controls.Add(radioButtonLogin);
+            Controls.Add(buttonLogin);
+            Controls.Add(textBoxPwd);
+            Controls.Add(labelPwd);
+            Controls.Add(labelEmail);
+            Controls.Add(textBoxEmail);
             Controls.Add(buttonSavePNG);
             Controls.Add(label5);
             Controls.Add(textBoxCumulativeLines);
@@ -239,21 +256,12 @@
             Controls.Add(textBoxCurLines);
             Controls.Add(labelDurchlauf);
             Controls.Add(textBoxDurchlauf);
-            Controls.Add(labelBid);
-            Controls.Add(labelLid);
-            Controls.Add(textBoxBid);
-            Controls.Add(textBoxLid);
-            Controls.Add(textBoxOid);
-            Controls.Add(textBoxUid);
-            Controls.Add(label3);
-            Controls.Add(label2);
-            Controls.Add(label1);
-            Controls.Add(textBoxBearer);
             Controls.Add(textBoxPGN);
             Controls.Add(buttonParseAll);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "PirateChess";
             Text = "Piratechess";
+            Load += PirateChess_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -262,16 +270,6 @@
 
         private Button buttonParseAll;
         private TextBox textBoxPGN;
-        private TextBox textBoxBearer;
-        private Label label1;
-        private Label label2;
-        private Label label3;
-        private TextBox textBoxUid;
-        private TextBox textBoxOid;
-        private TextBox textBoxLid;
-        private TextBox textBoxBid;
-        private Label labelLid;
-        private Label labelBid;
         private Label labelDurchlauf;
         private TextBox textBoxDurchlauf;
         private Label label4;
@@ -280,5 +278,14 @@
         private Label label5;
         private TextBox textBoxCumulativeLines;
         private Button buttonSavePNG;
+        private TextBox textBoxPwd;
+        private Label labelPwd;
+        private Label labelEmail;
+        private TextBox textBoxEmail;
+        private Button buttonLogin;
+        private RadioButton radioButtonLogin;
+        private RadioButton radioButtonBearer;
+        private Button buttonLoadChapters;
+        private ComboBox comboBoxChapters;
     }
 }

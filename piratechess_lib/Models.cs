@@ -144,20 +144,26 @@ namespace piratechess_lib
                     return "";
                 }
 
-                comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
-                comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
-                comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
-                comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
-                comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
-                comment = comment.Replace("@@HeaderStart@@", "").Replace("@@HeaderEnd@@", "");
-                comment = comment.Replace("<br/>", "").Replace("<br>", "");
-                comment = comment.Replace("</strong>", "").Replace("<strong>", "");
-                comment = comment.Replace("</bold>", "").Replace("<bold>", "");
-                comment = findHtmltags().Replace(comment, "");
-
-                return comment;
+                return replaceCommentStuff(comment);
             }
         }
+
+        private string replaceCommentStuff(string comment)
+        {
+            comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
+            comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
+            comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
+            comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
+            comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
+            comment = comment.Replace("@@HeaderStart@@", "").Replace("@@HeaderEnd@@", "");
+            comment = comment.Replace("<br/>", "").Replace("<br>", "");
+            comment = comment.Replace("</strong>", "").Replace("<strong>", "");
+            comment = comment.Replace("</bold>", "").Replace("<bold>", "");
+            comment = findHtmltags().Replace(comment, "");
+
+            return comment;
+        }
+
         public string CommentBefore
         {
             get
@@ -183,22 +189,41 @@ namespace piratechess_lib
                     return "";
                 }
 
-                comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
-                comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
-                comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
-                comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
-                comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
-                comment = comment.Replace("<br/>", "").Replace("<br>", "");
-                comment = comment.Replace("</strong>", "").Replace("<strong>", "");
-                comment = comment.Replace("</bold>", "").Replace("<bold>", "");
-                comment = findHtmltags().Replace(comment, "");
-
-                return comment;
+                return replaceCommentStuff(comment);
             }
         }
 
         [GeneratedRegex("<[^>]*>")]
         private static partial Regex findHtmltags();
 
+    }
+
+    public partial class ResponseLogin
+    {
+        public string Jwt { get; set; } = string.Empty;
+
+        public int Uid
+        {
+            get
+            {
+                return JwtHelper.ExtractUidFromToken(Jwt); 
+            }
+        }
+    }
+
+    public partial class ResponseChapterList
+    {
+        public JsonHomeData HomeData { get; set; } = new ();
+    }
+
+    public class JsonHomeData
+    {
+        public List<JsonBook> BooksList { get; set; } = [];
+    }
+
+    public class JsonBook
+    {
+        public int Bid { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

@@ -1,17 +1,29 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using RestSharp;
 
 namespace piratechess_lib
 {
-    public class PirateChessLib(string uid, string bearer)
+    public class PirateChessLib
     {
         private int _cumLines = 0;
         private Action<string>? _chapterCounterEvent;
         private Action<string>? _lineCounterEvent;
         private readonly StringBuilder _pgn = new();
-        private readonly string _bearer = bearer;
-        private readonly string _uid = uid;
+        private string _bearer = string.Empty;
+        private string _uid = string.Empty;
+
+        public PirateChessLib()
+        {
+
+        }
+
+        public PirateChessLib(string uid, string bearer)
+        {
+            _uid = uid;
+            _bearer = bearer;
+        }
 
         public (string, string) GetCourse(string bid, int lines = 10000)
         {
@@ -22,7 +34,7 @@ namespace piratechess_lib
             string url = $"https://www.chessable.com/api/v1/getCourse?uid={_uid}&bid={bid}";
             RestClient client = new(url);
 
-            RestRequest request = GenerateRequest(_bearer);
+            RestRequest request = GenerateRequest(_bearer, Method.Get);
 
             RestResponse response = client.Execute(request);
 
@@ -64,7 +76,7 @@ namespace piratechess_lib
         {
             RestClient client = new($"https://www.chessable.com/api/v1/getList?uid={_uid}&bid={bid}&lid={lid}");
 
-            RestRequest request = GenerateRequest(_bearer);
+            RestRequest request = GenerateRequest(_bearer, Method.Get);
 
             RestResponse response = client.Execute(request);
 
@@ -110,7 +122,7 @@ namespace piratechess_lib
             {
                 RestClient client = new($"https://www.chessable.com/api/v1/getGame?lng=en&uid={_uid}&oid={oid}");
 
-                RestRequest request = GenerateRequest(_bearer);
+                RestRequest request = GenerateRequest(_bearer, Method.Get);
 
                 RestResponse response = client.Execute(request);
                 content = response.Content ?? "";
@@ -141,18 +153,92 @@ namespace piratechess_lib
 
 
                         """));
-                /*
-                Invoke(new Action(() =>
-                {
-                    textBoxCumulativeLines.Text = _cumLines.ToString();
-                }));*/
             }
 
         }
 
-        private static RestRequest GenerateRequest(string bearer)
+        public Dictionary<string, string> GetChapters()
         {
-            RestRequest request = new("", Method.Get);
+            var chapters = new Dictionary<string, string>();
+            var client = new RestClient($"https://www.chessable.com/api/v1/getHomeData?uid={_uid}&sortBookRowsBy=alphabetically&userLanguageShort=en");
+
+            RestRequest request = GenerateRequest(_bearer, Method.Get);
+
+            RestResponse response = client.Execute(request);
+            var content = response.Content ?? "";
+
+            if (content != null)
+            {
+                ResponseChapterList responseChapterList = JsonSerializer.Deserialize<ResponseChapterList>(content, options: Options.GetOptions()) ?? new ResponseChapterList();
+
+                foreach (var item in responseChapterList.HomeData.BooksList)
+                {
+                    chapters.Add(item.Bid.ToString(), item.Name);
+                }
+            }
+            return chapters;
+        }
+
+        public string Login(string emailInput, string pwdInput)
+        {
+            var hash = ComputeSha512Hash(pwdInput);
+
+            RestClient client = new($"https://www.chessable.com/api/v1/authenticate");
+
+            var requestBody = new
+            {
+                method = "email",
+                credentials = new
+                {
+                    email = emailInput,
+                    password = hash
+                },
+                providerData = (object?)null,
+                mode = "login",
+                checkoutData = (object?)null,
+                preferredLanguage = "en",
+                newsletterChecked = false
+            };
+            string json = JsonSerializer.Serialize(requestBody);
+
+
+            RestRequest request = GenerateRequestLogin(json);
+
+            RestResponse response = client.Execute(request);
+            var content = response.Content ?? "";
+
+            if (content != null)
+            {
+                try
+                {
+                    if (!response.IsSuccessful)
+                    {
+                        return content;
+                    }
+                    //--ActivityStatusCode: Uauthorized
+                    ResponseLogin? responseLogin = JsonSerializer.Deserialize<ResponseLogin>(content, options: Options.GetOptions());
+
+                    if (responseLogin != null)
+                    {
+                        _bearer = responseLogin.Jwt;
+                        _uid = responseLogin.Uid.ToString();
+                    }
+                }
+                catch (Exception e)
+                {
+                    return (e.Message);
+                }
+            }
+            else
+            {
+                return "Antwort war leer - irgendwas ist falsch.";
+            }
+
+            return "";
+        }
+        private static RestRequest GenerateRequest(string bearer, Method method)
+        {
+            RestRequest request = new("", method);
             _ = request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0");
             _ = request.AddHeader("accept", "application/json, text/plain, */*");
             _ = request.AddHeader("accept-language", "en");
@@ -175,6 +261,86 @@ namespace piratechess_lib
             return request;
         }
 
+        private static RestRequest GenerateRequestLogin(string json)
+        {
+            var request = new RestRequest("", Method.Post);
+            request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0");
+            request.AddHeader("accept", "application/json, text/plain, */*");
+            request.AddHeader("accept-language", "en");
+            request.AddHeader("accept-encoding", "gzip, deflate, br, zstd");
+            request.AddHeader("referer", "https://www.chessable.com/login/");
+            request.AddHeader("content-type", "application/json;charset=utf-8");
+            request.AddHeader("platform", "Web");
+            request.AddHeader("x-os-name", "Firefox");
+            request.AddHeader("x-os-version", "137");
+            request.AddHeader("x-device-model", "Windows");
+            request.AddHeader("origin", "https://www.chessable.com");
+            request.AddHeader("alt-used", "www.chessable.com");
+            request.AddHeader("connection", "keep-alive");
+            request.AddHeader("sec-fetch-dest", "empty");
+            request.AddHeader("sec-fetch-mode", "cors");
+            request.AddHeader("sec-fetch-site", "same-origin");
+            request.AddHeader("dnt", "1");
+            request.AddHeader("sec-gpc", "1");
+            request.AddHeader("priority", "u=0");
+
+            request.AddJsonBody(json);
+
+            return request;
+        }
+
+        static string ComputeSha512Hash(string input)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(input);
+            byte[] hashBytes = SHA512.HashData(bytes);
+            StringBuilder builder = new();
+
+            foreach (byte b in hashBytes)
+            {
+                builder.Append(b.ToString("x2")); // hex format
+            }
+
+            return builder.ToString();
+        }
+
+        private static int ExtractUidFromToken(string jwtToken)
+        {
+            if (string.IsNullOrWhiteSpace(jwtToken))
+                throw new ArgumentException("Token darf nicht leer sein.", nameof(jwtToken));
+
+            var parts = jwtToken.Split('.');
+            if (parts.Length < 2)
+                throw new ArgumentException("Ungültiges JWT-Format.");
+
+            string payload = parts[1];
+            string json = DecodeBase64Url(payload);
+
+            using JsonDocument doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
+
+            if (root.TryGetProperty("user", out JsonElement userElement) &&
+                userElement.TryGetProperty("uid", out JsonElement uidElement))
+            {
+                return uidElement.GetInt32();
+            }
+
+            throw new InvalidOperationException("UID konnte im Token nicht gefunden werden.");
+        }
+
+        private static string DecodeBase64Url(string base64Url)
+        {
+            string padded = base64Url.Replace('-', '+').Replace('_', '/');
+            switch (padded.Length % 4)
+            {
+                case 2: padded += "=="; break;
+                case 3: padded += "="; break;
+                case 1: padded += "="; break;
+            }
+
+            byte[] data = Convert.FromBase64String(padded);
+            return Encoding.UTF8.GetString(data);
+        }
+
         public void SetChapterCounterEvent(Action<string> setChapterCounter)
         {
             _chapterCounterEvent = setChapterCounter;
@@ -183,6 +349,24 @@ namespace piratechess_lib
         public void SetLineCounterEvent(Action<string> setLineCounter)
         {
             _lineCounterEvent = setLineCounter;
+        }
+
+        public string ExtractUid(string jwt)
+        {
+            var resp = new ResponseLogin
+            {
+                Jwt = jwt
+            };
+            _bearer = jwt;
+            try
+            {
+                _uid = resp.Uid.ToString();
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return "";
         }
     }
 }

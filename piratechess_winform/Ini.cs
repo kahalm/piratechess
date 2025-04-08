@@ -6,7 +6,7 @@ namespace piratechess_Winform
     class INIFileHandler
     {
         // Method to write string values to an INI file
-        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3)
+        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3, string key4, string value4, string key5, string value5)
         {
             StringBuilder iniContent = new();
 
@@ -17,13 +17,15 @@ namespace piratechess_Winform
             iniContent.AppendLine($"{key1}={value1}");
             iniContent.AppendLine($"{key2}={value2}");
             iniContent.AppendLine($"{key3}={value3}");
+            iniContent.AppendLine($"{key4}={value4}");
+            iniContent.AppendLine($"{key5}={value5}");
 
             // Write to the file
             File.WriteAllText(filePath, iniContent.ToString());
         }
 
         // Method to read string values from an INI file
-        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3)
+        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3, string key4, string key5)
         {
             if (!File.Exists(filePath))
             {
@@ -33,7 +35,7 @@ namespace piratechess_Winform
 
             string[] lines = File.ReadAllLines(filePath);
             string currentSection = "";
-            string value1 = "", value2 = "", value3 = "";
+            string value1 = "", value2 = "", value3 = "", value4 = "", value5 = "";
 
             foreach (var line in lines)
             {
@@ -56,6 +58,10 @@ namespace piratechess_Winform
                         value2 = line.Split('=')[1];
                     else if (line.StartsWith(key3))
                         value3 = line.Split('=')[1];
+                    else if (line.StartsWith(key4))
+                        value4 = line.Split('=')[1];
+                    else if (line.StartsWith(key5))
+                        value5 = line.Split('=')[1];
                 }
             }
 
@@ -64,7 +70,9 @@ namespace piratechess_Winform
             {
                 { key1, value1 },
                 { key2, value2 },
-                { key3, value3 }
+                { key3, value3 },
+                { key4, value4 },
+                { key5, value5 }
             };
 
             return dict;

@@ -1,90 +1,92 @@
-﻿using piratechess_lib;
+﻿using System.Security.Cryptography;
+using System.Text;
+using piratechess_lib;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace piratechess_Winform
 {
     public partial class PirateChess : Form, IDisposable
     {
         private string _coursename = string.Empty;
+        private readonly PirateChessLib _pirate = new();
         public PirateChess()
         {
             InitializeComponent();
 
 
             // Read values from INI
-            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3);
-            if (!settings.TryGetValue(Options.key1, out string? value1))
+            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3, Options.key4, Options.key5);
+            /* if (!settings.TryGetValue(Options.key1, out string? value1))
+             {
+                 value1 = "";
+             }
+             if (!settings.TryGetValue(Options.key2, out string? value2))
+             {
+                 value2 = "";
+             }
+             if (!settings.TryGetValue(Options.key3, out string? value3))
+             {
+                 value3 = "";
+             }*/
+            if (!settings.TryGetValue(Options.key4, out string? value4))
             {
-                value1 = "";
+                value4 = "";
             }
-            if (!settings.TryGetValue(Options.key2, out string? value2))
+            if (!settings.TryGetValue(Options.key5, out string? value5))
             {
-                value2 = "";
-            }
-            if (!settings.TryGetValue(Options.key3, out string? value3))
-            {
-                value3 = "";
+                value5 = "";
             }
 
 
-            textBoxBearer.Text = value1;
-            textBoxUid.Text = value2;
-            textBoxBid.Text = value3;
+            textBoxEmail.Text = value4;
+            textBoxPwd.Text = value5;
+
+
+            _pirate.SetChapterCounterEvent(SetChapterCounter);
+            _pirate.SetLineCounterEvent(SetLineCounter);
+
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             // Write values to INI
-            INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, textBoxBearer.Text,
-                Options.key2, textBoxUid.Text, Options.key3, textBoxBid.Text);
+            INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, "",
+                Options.key2, "", Options.key3, "", Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text);
 
             base.OnFormClosed(e);
         }
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            if (textBoxBearer.Text.Length < 3000)
-            {
-                MessageBox.Show("bearer missing");
-                return;
-            }
+            LoadLines();
+        }
 
-            if (textBoxUid.Text.Length == 0)
-            {
-                MessageBox.Show("uid (userid) missing");
-                return;
-            }
-
-            if (textBoxBid.Text.Length == 0)
-            {
-                MessageBox.Show("bid (Courseid) missing");
-                return;
-            }
+        private void LoadLines(int maxLines = 10000)
+        {
+            SetButtonsEnabledState(false);
+            var bid = (string?)comboBoxChapters.SelectedValue ?? "";
+            textBoxPGN.Text = "";
+            textBoxCumulativeLines.Text = "0";
 
             new Thread(() =>
             {
-                var pirate = new PirateChessLib(textBoxUid.Text, textBoxBearer.Text);
-
-                pirate.SetChapterCounterEvent(SetChapterCounter);
-                pirate.SetLineCounterEvent(SetLineCounter);
-
-                Invoke(new Action(() =>
-                {
-                    textBoxPGN.Text = "";
-                    textBoxCumulativeLines.Text = "0";
-                }));
-
-                (var pgn, _coursename) = pirate.GetCourse(textBoxUid.Text);
-
+                (string? pgn, _coursename) = _pirate.GetCourse(bid, maxLines);
 
                 Invoke(new Action(() =>
                 {
                     textBoxPGN.Text = pgn;
+                    SetButtonsEnabledState(true);
                 }));
-
 
                 MessageBox.Show("Finished.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.None,
          MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
             }).Start();
+
+        }
+
+        private void ButtonFirstTenLines_Click_1(object sender, EventArgs e)
+        {
+            LoadLines(10);
         }
 
         public void SetChapterCounter(string chapterCounter)
@@ -105,19 +107,13 @@ namespace piratechess_Winform
             }));
         }
 
-        private void ButtonFirstTenLines_Click_1(object sender, EventArgs e)
+        private void SetButtonsEnabledState(bool state)
         {
-            new Thread(() =>
-            {
-                var pirate = new PirateChessLib(textBoxUid.Text, textBoxBearer.Text);
-                (var pgn, _coursename) = pirate.GetCourse(textBoxBid.Text, 10);
-
-
-                Invoke(new Action(() =>
-                {
-                    textBoxPGN.Text = pgn.ToString();
-                }));
-            }).Start();
+            buttonLogin.Enabled = state;
+            buttonLoadChapters.Enabled = state;
+            buttonFirstTenLines.Enabled = state;
+            buttonParseAll.Enabled = state;
+            buttonSavePNG.Enabled = state;
         }
 
         private void ButtonSavePNG_Click(object sender, EventArgs e)
@@ -150,6 +146,81 @@ namespace piratechess_Winform
                 }
             }
         }
-    }
 
+        private void ButtonLogin_Click(object sender, EventArgs e)
+        {
+            string result;
+
+            if (radioButtonBearer.Checked)
+            {
+                result = _pirate.ExtractUid(textBoxEmail.Text);
+            }
+            else
+            {
+                result = _pirate.Login(textBoxEmail.Text, textBoxPwd.Text);
+            }
+
+            if (result != "")
+            {
+                MessageBox.Show(result);
+            }
+            else
+            {
+                buttonLoadChapters.Enabled = true;
+            }
+        }
+
+        private void PirateChess_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void RadioButtonBearer_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButtonBearer.Checked)
+            {
+                labelEmail.Text = "Bearer";
+                labelPwd.Visible = false;
+                textBoxPwd.Visible = false;
+            }
+            else
+            {
+                labelEmail.Text = "Email";
+                labelPwd.Text = "Password";
+                labelPwd.Visible = true;
+                textBoxPwd.Visible = true;
+            }
+
+        }
+
+        private void ButtonLoadChapters_Click(object sender, EventArgs e)
+        {
+            var chapters = _pirate.GetChapters();
+
+            var tmp = new List<(string a, string b)>();
+            foreach (var chapter in chapters)
+            {
+                tmp.Add((chapter.Key, chapter.Value));
+            }
+
+
+            comboBoxChapters.DataSource = new BindingSource(chapters, "");
+            comboBoxChapters.DisplayMember = "Value";
+            comboBoxChapters.ValueMember = "Key";
+        }
+
+        private void ComboBoxChapters_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxChapters.SelectedValue is not null and not (object)"")
+            {
+                buttonFirstTenLines.Enabled = true;
+                buttonParseAll.Enabled = true;
+            }
+            else
+            {
+                buttonFirstTenLines.Enabled = false;
+                buttonParseAll.Enabled = false;
+            }
+        }
+    }
 }
