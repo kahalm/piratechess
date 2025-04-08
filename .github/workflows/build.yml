@@ -15,7 +15,7 @@ jobs:
   build-winforms:
     runs-on: windows-latest
 
-    if: ${{ github.event.inputs.job == 'winforms' || github.event.inputs.job == 'all' }}    
+    if: ${{ github.event_name == 'release' || (github.event.inputs.job == 'winforms' || github.event.inputs.job == 'all') }}
 
     steps:
     - name: Repository auschecken
@@ -54,7 +54,7 @@ jobs:
   build-maui-win:
     runs-on: windows-latest  # MAUI build now runs on Windows
 
-    if: ${{ github.event.inputs.job == 'maui' || github.event.inputs.job == 'all' }}
+    if: ${{ github.event_name == 'release' || (github.event.inputs.job == 'maui' || github.event.inputs.job == 'all') }}
     
     steps:
     - name: Repository auschecken
@@ -63,7 +63,7 @@ jobs:
     - name: .NET SDK einrichten für MAUI
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0'  # Setze hier die gewünschte .NET Version (9.0)
+        dotnet-version: '9.0'  # Setze hier die gewünschte .NET Version (9.0)
 
     - name: Install MAUI workloads
       run: dotnet workload install maui
