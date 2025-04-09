@@ -21,3 +21,7 @@ Planned:
 * More Errorhandling (especially in the Maui version)
 * Export arrows and colours
 * make it possible to login with bearer token
+
+Gui very barebone for now - especially the dropdownbox is barely visible when empty.
+![image](https://github.com/user-attachments/assets/0f7a25a7-ad2a-4143-84b1-d5ba3c9f789c)
+
