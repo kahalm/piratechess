@@ -181,6 +181,14 @@ namespace piratechess_lib
 
         public string Login(string emailInput, string pwdInput)
         {
+            if(string.IsNullOrEmpty(emailInput))
+            {
+                return "please fill out email.";
+            }
+            if (string.IsNullOrEmpty(pwdInput))
+            {
+                return "please fill out password.";
+            }
             var hash = ComputeSha512Hash(pwdInput);
 
             RestClient client = new($"https://www.chessable.com/api/v1/authenticate");

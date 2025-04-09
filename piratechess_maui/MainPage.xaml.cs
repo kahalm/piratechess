@@ -12,21 +12,52 @@ namespace piratechess_maui
 
         private void OnButtonFirstTenLinesClicked(object sender, EventArgs e)
         {
-            GenerateLines(10);
+            GenerateLinesAsync(10);
         }
         private void OnButtonLoginClicked(object sender, EventArgs e)
         {
-            _pirate.Login(EntryBearer.Text, EntryUid.Text);
+            Login();
+        }
+
+        private async void Login()
+        {
+           var result = _pirate.Login(EntryBearer.Text, EntryUid.Text);
+
+            if (result != "")
+            {
+                await Shell.Current.DisplayAlert("Error", result, "OK");
+            }
+            else
+            {
+                await Shell.Current.DisplayAlert("Login ok", "Login ok", "OK");
+            }
         }
         private void OnButtonLoadChapterClicked(object sender, EventArgs e)
         {
-            var items = _pirate.GetChapters();
-
-            myPicker.ItemsSource = items.ToList();
+            LoadChaptersAsync();
         }
 
-        private void GenerateLines(int maxLines = 10000)
+        private async void LoadChaptersAsync()
         {
+            var items = _pirate.GetChapters();
+
+            if (items.Count == 0)
+            {
+
+                await Shell.Current.DisplayAlert("Warning", "No chapters found", "OK");
+            }
+            myPicker.ItemsSource = items.ToList();
+            myPicker.SelectedIndex = 0;
+        }
+
+        private async void GenerateLinesAsync(int maxLines = 10000)
+        {
+            if (myPicker.SelectedIndex == -1)
+            {
+                await Shell.Current.DisplayAlert("Warning", "Please Select a chapter", "OK");
+                return;
+            }
+
             var selected = (KeyValuePair<string, string>)myPicker.SelectedItem;
             _pirate.SetChapterCounterEvent(ChapterCounter);
             _pirate.SetLineCounterEvent(LineCounter);
@@ -44,7 +75,7 @@ namespace piratechess_maui
 
         private void OnButtonGenerateCourseClicked(object sender, EventArgs e)
         {
-            GenerateLines();
+            GenerateLinesAsync();
         }
 
         private void LineCounter(string obj)
