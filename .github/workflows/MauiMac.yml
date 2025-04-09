@@ -1,4 +1,4 @@
-name: Build Projects for Windows (WinForms) and Android (MAUI)
+name: Build Maui MAC
 
 on:
   release:
