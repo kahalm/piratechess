@@ -40,7 +40,7 @@ jobs:
       shell: bash
       run: |
         dotnet publish ./piratechess_maui/piratechess_maui.csproj \
-          -f net9.0-android35.0 \
+          -f net9.0-android \
           --output ./publish/maui/android \
           --self-contained false \
           -p:ApplicationDisplayVersion=${{ env.VERSION_NAME }} \
