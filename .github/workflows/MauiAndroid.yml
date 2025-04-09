@@ -36,7 +36,8 @@ jobs:
     - name: Install MAUI workloads
       run: dotnet workload install maui
 
-    - name: Build MAUI project for Android
+    - name: Build MAUI project for Android 
+      shell: bash
       run: |
         dotnet publish ./piratechess_maui/piratechess_maui.csproj \
           -f net9.0-android35.0 \
