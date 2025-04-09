@@ -1,22 +1,31 @@
-name: Test Maui Android
-
+name: Build Maui Android
 on:
+  release:
+    types:
+      - published
   workflow_dispatch:
-    inputs:
-      job:
-        description: 'Which job to run'
-        required: true
-        default:  'all'  # Default to running all jobs
-
+  
 jobs:
-  build-maui-win:
+  build-maui-android:
     runs-on: windows-latest  # MAUI build now runs on Windows
-
-    if: ${{ github.event_name == 'release' || (github.event.inputs.job == 'maui' || github.event.inputs.job == 'all') }}
     
     steps:
     - name: Repository auschecken
       uses: actions/checkout@v4
+
+      
+    - name: Set version from tag
+      id: version
+      run: |
+        TAG=${GITHUB_REF##*/}
+        echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
+        VERSION_NAME=${TAG#v}  # remove leading "v" if present
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NAME"
+        VERSION_CODE=$((10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH))
+        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+        echo "Version: $VERSION_NAME ($VERSION_CODE)"
+
 
     - name: .NET SDK einrichten für MAUI
       uses: actions/setup-dotnet@v4
@@ -26,34 +35,21 @@ jobs:
     - name: Install MAUI workloads
       run: dotnet workload install maui
 
-    - name: Build MAUI project for Windows
-      run: dotnet build ./piratechess_maui/piratechess_maui.csproj
+    - name: Build MAUI project for Android
+      run: |
+        dotnet publish ./piratechess_maui/piratechess_maui.csproj \
+          -f net9.0-android35.0 \
+          --output ./publish/maui/android \
+          --self-contained false \
+          -p:ApplicationDisplayVersion=${{ env.VERSION_NAME }} \
+          -p:ApplicationVersion=${{ env.VERSION_CODE }} \
+          -p:PackageFormat=Apk
 
-    - name: Publish MAUI project for Windows (Single File)
-      run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-android35.0 --output ./publish/maui/android --self-contained false -p:PackageFormat=Apk
-
-    - name: Release-Asset erstellen für MAUI
+    - name: Upload APK to GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        files: 
-          ./publish/maui/android/*.apk
-      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}  # Only run on release or tag push
- 
+        files: ./publish/maui/android/*.apk
+      if: ${{ github.event_name == 'release' || github.event_name == 'push' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Optional: Clean up after the build
-  clean-up:
-    runs-on: windows-latest
-    needs: [build-maui-win]  # Ensure cleanup runs after both build jobs
-
-    steps:
-    - name: Clean up build artifacts
-      shell: pwsh
-      run: |
-        if (Test-Path ./publish) {
-          Remove-Item -Recurse -Force ./publish
-          Write-Host "Publish folder cleaned up."
-        } else {
-          Write-Host "No publish folder to clean up."
-        }

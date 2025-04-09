@@ -1,0 +1,38 @@
+name: Build Projects for Windows (WinForms) and Android (MAUI)
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+  
+jobs:
+  build-maui-macos:
+    runs-on: macos-latest  # macOS-Build für MAUI
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: .NET SDK einrichten für MAUI (macOS)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: MAUI workloads installieren
+        run: dotnet workload install maui
+
+      - name: Build MAUI Projekt für macOS Catalyst
+        run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst
+
+      - name: Publish MAUI Projekt für macOS (Trimmed, Nicht-Self-Contained)
+        run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst --output ./publish/maui/macos --self-contained false -r maccatalyst-x64 /p:PublishTrimmed=true /p:PublishSingleFile=false /p:PublishReadyToRun=false /p:DebugType=none
+
+      - name: Release-Asset erstellen für macOS
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./publish/maui/macos/**
+        if: ${{ github.event_name == 'release' || github.event_name == 'push' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          

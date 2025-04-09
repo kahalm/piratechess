@@ -1,18 +1,14 @@
-name: TestWinformWindows
+name: Build Winforms windows
 
 on:
-  workflow_dispatch: 
-    inputs:
-      job:
-        description: 'Which job to run'
-        required: true
-        default:  'all'  # Default to running all jobs  
-
+  release:
+    types:
+      - published
+  workflow_dispatch:
+  
 jobs:
   build-winforms:
     runs-on: windows-latest
-
-    if: ${{ github.event.inputs.job == 'winforms' || github.event.inputs.job == 'all' }}    
 
     steps:
     - name: Repository auschecken
@@ -46,7 +42,3 @@ jobs:
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-  
-
-

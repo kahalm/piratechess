@@ -1,0 +1,27 @@
+name: Build Maui ios
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  build-maui-ios:
+    runs-on: macos-latest  # MAUI iOS benötigt macOS + Xcode
+      
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+  
+      - name: .NET SDK einrichten
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+  
+      - name: MAUI workloads installieren
+        run: dotnet workload install maui
+  
+      - name: iOS-Projekt kompilieren für Simulator
+        run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-ios -c Release -r ios-arm64
+        
