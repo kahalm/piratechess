@@ -48,6 +48,8 @@
             radioButtonBearer = new RadioButton();
             buttonLoadChapters = new Button();
             comboBoxChapters = new ComboBox();
+            labelBearer = new Label();
+            textBoxBearer = new TextBox();
             SuspendLayout();
             // 
             // buttonParseAll
@@ -234,11 +236,29 @@
             comboBoxChapters.TabIndex = 30;
             comboBoxChapters.SelectedIndexChanged += ComboBoxChapters_SelectedIndexChanged;
             // 
+            // labelBearer
+            // 
+            labelBearer.AutoSize = true;
+            labelBearer.Location = new Point(46, 104);
+            labelBearer.Name = "labelBearer";
+            labelBearer.Size = new Size(52, 20);
+            labelBearer.TabIndex = 32;
+            labelBearer.Text = "Bearer";
+            // 
+            // textBoxBearer
+            // 
+            textBoxBearer.Location = new Point(126, 104);
+            textBoxBearer.Name = "textBoxBearer";
+            textBoxBearer.Size = new Size(125, 27);
+            textBoxBearer.TabIndex = 31;
+            // 
             // PirateChess
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1293, 617);
+            Controls.Add(labelBearer);
+            Controls.Add(textBoxBearer);
             Controls.Add(comboBoxChapters);
             Controls.Add(buttonLoadChapters);
             Controls.Add(radioButtonBearer);
@@ -287,5 +307,7 @@
         private RadioButton radioButtonBearer;
         private Button buttonLoadChapters;
         private ComboBox comboBoxChapters;
+        private Label labelBearer;
+        private TextBox textBoxBearer;
     }
 }

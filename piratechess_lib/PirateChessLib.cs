@@ -181,7 +181,7 @@ namespace piratechess_lib
 
         public string Login(string emailInput, string pwdInput)
         {
-            if(string.IsNullOrEmpty(emailInput))
+            if (string.IsNullOrEmpty(emailInput))
             {
                 return "please fill out email.";
             }
@@ -376,5 +376,14 @@ namespace piratechess_lib
             }
             return "";
         }
+
+        public string LoginWithBearer(string text)
+        {
+            _bearer = text;
+            _uid = JwtHelper.ExtractUidFromToken(text).ToString();
+
+            return "";
+        }
     }
 }
+    

@@ -16,15 +16,15 @@ namespace piratechess_Winform
             /* if (!settings.TryGetValue(Options.key1, out string? value1))
              {
                  value1 = "";
-             }
-             if (!settings.TryGetValue(Options.key2, out string? value2))
-             {
-                 value2 = "";
-             }
-             if (!settings.TryGetValue(Options.key3, out string? value3))
-             {
-                 value3 = "";
              }*/
+            if (!settings.TryGetValue(Options.key2, out string? value2))
+            {
+                value2 = "";
+            }
+            if (!settings.TryGetValue(Options.key3, out string? value3))
+            {
+                value3 = "";
+            }
             if (!settings.TryGetValue(Options.key4, out string? value4))
             {
                 value4 = "";
@@ -34,21 +34,29 @@ namespace piratechess_Winform
                 value5 = "";
             }
 
-
+            if (value2 == "1")
+            {
+                radioButtonBearer.Checked = true;
+            }
+            else
+            {
+                radioButtonLogin.Checked = true;
+            }
+            textBoxBearer.Text = value3;
             textBoxEmail.Text = value4;
             textBoxPwd.Text = value5;
 
+            setEditVisibility();
 
             _pirate.SetChapterCounterEvent(SetChapterCounter);
             _pirate.SetLineCounterEvent(SetLineCounter);
-
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             // Write values to INI
             INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, "",
-                Options.key2, "", Options.key3, "", Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text);
+                Options.key2, radioButtonBearer.Checked ? "1" : "", Options.key3, textBoxBearer.Text, Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text);
 
             base.OnFormClosed(e);
         }
@@ -150,7 +158,7 @@ namespace piratechess_Winform
 
             if (radioButtonBearer.Checked)
             {
-                result = _pirate.ExtractUid(textBoxEmail.Text);
+                result = _pirate.LoginWithBearer(textBoxEmail.Text);
             }
             else
             {
@@ -172,34 +180,49 @@ namespace piratechess_Winform
 
         }
 
-        private void RadioButtonBearer_CheckedChanged(object sender, EventArgs e)
+        private void setEditVisibility()
         {
             if (radioButtonBearer.Checked)
             {
-                labelEmail.Text = "Bearer";
+                labelBearer.Visible = true;
+                textBoxBearer.Visible = true;
+                labelEmail.Visible = false;
+                textBoxEmail.Visible = false;
                 labelPwd.Visible = false;
                 textBoxPwd.Visible = false;
             }
             else
             {
-                labelEmail.Text = "Email";
-                labelPwd.Text = "Password";
+                labelBearer.Visible = false;
+                textBoxBearer.Visible = false;
+                labelEmail.Visible = true;
+                textBoxEmail.Visible = true;
                 labelPwd.Visible = true;
                 textBoxPwd.Visible = true;
             }
 
+        }
+        private void RadioButtonBearer_CheckedChanged(object sender, EventArgs e)
+        {
+            setEditVisibility();
         }
 
         private void ButtonLoadChapters_Click(object sender, EventArgs e)
         {
             var chapters = _pirate.GetChapters();
 
+            if (chapters.Count == 0)
+            {
+
+                MessageBox.Show("Error", "No chapters found. Most likely login wrong.", MessageBoxButtons.OK, MessageBoxIcon.None,
+         MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
+            }
+
             var tmp = new List<(string a, string b)>();
             foreach (var chapter in chapters)
             {
                 tmp.Add((chapter.Key, chapter.Value));
             }
-
 
             comboBoxChapters.DataSource = new BindingSource(chapters, "");
             comboBoxChapters.DisplayMember = "Value";
