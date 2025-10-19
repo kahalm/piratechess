@@ -67,7 +67,7 @@ namespace piratechess_Winform
             LoadLines();
         }
 
-        private void LoadLines(int maxLines = 10000)
+        private void LoadLines(bool useLocalData = false, int maxLines = 10000)
         {
             SetButtonsEnabledState(false);
             var bid = (string?)comboBoxChapters.SelectedValue ?? "";
@@ -76,7 +76,7 @@ namespace piratechess_Winform
 
             new Thread(() =>
             {
-                (string? pgn, _coursename) = _pirate.GetCourse(bid, maxLines);
+                (string? pgn, _coursename) = _pirate.GetCourse(bid, maxLines, useLocalData);
 
                 Invoke(new Action(() =>
                 {
@@ -92,7 +92,7 @@ namespace piratechess_Winform
 
         private void ButtonFirstTenLines_Click_1(object sender, EventArgs e)
         {
-            LoadLines(10);
+            LoadLines(maxLines: 10);
         }
 
         public void SetChapterCounter(string chapterCounter)
@@ -120,6 +120,8 @@ namespace piratechess_Winform
             buttonFirstTenLines.Enabled = state;
             buttonParseAll.Enabled = state;
             buttonSavePNG.Enabled = state;
+            buttonSaveRestResponse.Enabled = state;
+            buttonLoadRestResponse.Enabled = state;
         }
 
         private void ButtonSavePNG_Click(object sender, EventArgs e)
@@ -301,6 +303,7 @@ namespace piratechess_Winform
             // Assign deserialized course to the library instance
             _pirate.restResponseCourse = course;
 
+            LoadLines(useLocalData: true);
         } 
     }
 }

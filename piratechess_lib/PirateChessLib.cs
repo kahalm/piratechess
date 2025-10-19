@@ -28,28 +28,39 @@ namespace piratechess_lib
             _bearer = bearer;
         }
 
-        public (string, string) GetCourse(string bid, int lines = 10000)
+        public (string, string) GetCourse(string bid, int lines = 10000, bool useLocalData = false)
         {
             _cumLines = 0;
+            string? content = null;
             string coursename = string.Empty;
+
             JsonSerializerOptions caseInvariant = Options.GetOptions();
 
-            string url = $"https://www.chessable.com/api/v1/getCourse?uid={_uid}&bid={bid}";
-            RestClient client = new(url);
+            if (useLocalData)
+            {
+                content = restResponseCourse?.CourseJsonContent;
+            
+            } else
+            {
+                string url = $"https://www.chessable.com/api/v1/getCourse?uid={_uid}&bid={bid}";
+                RestClient client = new(url);
 
-            RestRequest request = GenerateRequest(_bearer, Method.Get);
+                RestRequest request = GenerateRequest(_bearer, Method.Get);
 
-            RestResponse response = client.Execute(request);
+                RestResponse response = client.Execute(request);
 
+                content = response.Content;
+            }
 
-
-            string content = response.Content ?? "";
             if (content != null)
             {
-                restResponseCourse = new()
+                if (!useLocalData)
                 {
-                    CourseJsonContent = content
-                };
+                    restResponseCourse = new()
+                    {
+                        CourseJsonContent = content
+                    };
+                }
                 ResponseCourse? course = null;
                 try
                 {
@@ -68,10 +79,12 @@ namespace piratechess_lib
                     chapterCounter++;
 
                     _chapterCounterEvent?.Invoke($"{chapterCounter} / {course.Course.Data.Count}");
-                    coursename = GetChapter(Options.GetOptions(), lines, chapterCounter, bid, item.Id.ToString());
+                    coursename = GetChapter(Options.GetOptions(), lines, chapterCounter, bid, item.Id.ToString(), useLocalData);
                     Random rand = new();
-                    System.Threading.Thread.Sleep(rand.Next(500, 1500));
-
+                    if (!useLocalData)
+                    {
+                        System.Threading.Thread.Sleep(rand.Next(500, 1500));
+                    }
                     if (lines <= _cumLines)
                     {
                         break;
@@ -81,25 +94,40 @@ namespace piratechess_lib
             return (_pgn.ToString(), coursename);
         }
 
-        private string GetChapter(JsonSerializerOptions caseInvariant, int lines, int chapter, string bid, string lid)
+        private string GetChapter(JsonSerializerOptions caseInvariant, int lines, int chapter, string bid, string lid, bool useLocalData)
         {
-            RestClient client = new($"https://www.chessable.com/api/v1/getList?uid={_uid}&bid={bid}&lid={lid}");
-
-            RestRequest request = GenerateRequest(_bearer, Method.Get);
-
-            RestResponse response = client.Execute(request);
-
-            string content = response.Content ?? "";
+            string? content = null;
             string coursename = "";
+            RestResponseChapter? restResponseChapter = null;
+
+            if (useLocalData)
+            {
+                if (chapter - 1 < restResponseCourse?.ChapterList.Count)
+                {
+                    restResponseChapter = restResponseCourse?.ChapterList[chapter - 1];
+                }
+                content = restResponseChapter?.ChapterJsonContent;
+            }
+            else
+            {
+                RestClient client = new($"https://www.chessable.com/api/v1/getList?uid={_uid}&bid={bid}&lid={lid}");
+
+                RestRequest request = GenerateRequest(_bearer, Method.Get);
+
+                RestResponse response = client.Execute(request);
+                content = response.Content ?? "";
+            }
             if (content != null)
             {
-                var restResponseChapter = new RestResponseChapter
+                if (!useLocalData)
                 {
-                    ChapterJsonContent = content
-                };
+                    restResponseChapter = new RestResponseChapter
+                    {
+                        ChapterJsonContent = content
+                    };
 
-                restResponseCourse?.ChapterList.Add(restResponseChapter);
-
+                    restResponseCourse?.ChapterList.Add(restResponseChapter);
+                }
                 ResponseChapter responseChapter = JsonSerializer.Deserialize<ResponseChapter>(content, options: caseInvariant) ?? new ResponseChapter();
                 coursename = responseChapter.List.Name;
                 int count = 0;
@@ -118,7 +146,7 @@ namespace piratechess_lib
                         Black = responseChapter.List.Title
                     };
 
-                    GetLine(Options.GetOptions(), pgnHeader, line.Id.ToString(), restResponseChapter);
+                    GetLine(Options.GetOptions(), pgnHeader, line.Id.ToString(), restResponseChapter, count, useLocalData);
 
                     if (lines < _cumLines)
                     {
@@ -130,10 +158,16 @@ namespace piratechess_lib
             return coursename;
         }
 
-        private void GetLine(JsonSerializerOptions caseInvariant, PgnInfo pgnHeader, string oid, RestResponseChapter restResponseChapter, string json = "")
+        private void GetLine(JsonSerializerOptions caseInvariant, PgnInfo pgnHeader, string oid, RestResponseChapter? restResponseChapter, int lineCounter, bool useLocalData = false, string json = "")
         {
-            string content = "";
-            if (json == "")
+            string? content = null;
+            if (json == "" && useLocalData)
+            {
+                if (lineCounter - 1 < restResponseChapter?.ResponseLineList.Count())
+                {
+                    content = restResponseChapter?.ResponseLineList[lineCounter - 1].LineJsonContent;
+                }
+            } else if (json == "")
             {
                 RestClient client = new($"https://www.chessable.com/api/v1/getGame?lng=en&uid={_uid}&oid={oid}");
 
@@ -141,7 +175,7 @@ namespace piratechess_lib
 
                 RestResponse response = client.Execute(request);
 
-                content = response.Content ?? "";
+                content = response.Content;
             }
             else
             {
@@ -150,10 +184,13 @@ namespace piratechess_lib
 
             if (content != null)
             {
-                restResponseChapter.ResponseLineList.Add(new RestResponseLine
+                if (!useLocalData)
                 {
-                    LineJsonContent = content
-                });
+                    restResponseChapter?.ResponseLineList.Add(new RestResponseLine
+                    {
+                        LineJsonContent = content
+                    });
+                }
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
                 string? pgn = game?.Game?.GeneratePGN();
 
