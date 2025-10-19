@@ -13,6 +13,8 @@ Steps to use the program:
 * Click Generate
 * Save the pgn or copy it to your prefered Program
 
+* you can now save (in the winform-version) the raw Response from the server and load it again - this way you have to hit the server only once. if anything is not working just send me an email or open a issue and attach the rrf (.restResponse) file - that way I can debug the Problem without needing the course itself.
+
 No Video export and none planned.
 
 Currently only exporting Moves & Text.
