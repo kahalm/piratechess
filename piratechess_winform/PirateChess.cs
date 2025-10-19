@@ -1,4 +1,5 @@
 ﻿using piratechess_lib;
+using System.Text.Json;
 
 namespace piratechess_Winform
 {
@@ -242,5 +243,64 @@ namespace piratechess_Winform
                 buttonParseAll.Enabled = false;
             }
         }
+
+        private void buttonSaveRestResponse_Click(object sender, EventArgs e)
+        {
+            // Create a SaveFileDialog to allow the user to choose the save location
+            using SaveFileDialog saveFileDialog = new();
+            // Set the default file name
+
+            string invalidChars = new(Path.GetInvalidFileNameChars());
+            string sanitizedFilename = string.Concat(_coursename.Split(invalidChars.ToCharArray()));
+
+            saveFileDialog.FileName = $"{sanitizedFilename}.restResponse";  // Adjust this default filename as needed
+            saveFileDialog.Filter = "RRF files (*.restResponse)|*.restResponse|All files (*.*)|*.*"; // File type filter
+
+            // Show the save file dialog and check if the user selected a file
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Get the file path chosen by the user
+                string filePath = saveFileDialog.FileName;
+
+                try
+                {
+                    // Write the content of the TextBox to the selected file
+                    File.WriteAllText(filePath, JsonSerializer.Serialize(_pirate.restResponseCourse));
+                    MessageBox.Show("File saved successfully!");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred while saving the file: " + ex.Message);
+                }
+            }
+        }
+
+        private void buttonLoadRestResponse_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog openFileDialog = new();
+            openFileDialog.Filter = "RRF files (*.restResponse)|*.restResponse|All files (*.*)|*.*";
+            openFileDialog.Title = "Load Rest Response";
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            string json = File.ReadAllText(openFileDialog.FileName);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var course = JsonSerializer.Deserialize<RestResponseCourse>(json, options);
+
+            if (course == null)
+            {
+                MessageBox.Show("Deserialization failed: file did not contain a valid RestResponseCourse.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Assign deserialized course to the library instance
+            _pirate.restResponseCourse = course;
+
+        } 
     }
 }

@@ -14,10 +14,13 @@ namespace piratechess_lib
         private string _bearer = string.Empty;
         private string _uid = string.Empty;
 
+        public RestResponseCourse? restResponseCourse { get; set; }
+
         public PirateChessLib()
         {
 
         }
+
 
         public PirateChessLib(string uid, string bearer)
         {
@@ -38,9 +41,15 @@ namespace piratechess_lib
 
             RestResponse response = client.Execute(request);
 
+
+
             string content = response.Content ?? "";
             if (content != null)
             {
+                restResponseCourse = new()
+                {
+                    CourseJsonContent = content
+                };
                 ResponseCourse? course = null;
                 try
                 {
@@ -80,11 +89,17 @@ namespace piratechess_lib
 
             RestResponse response = client.Execute(request);
 
-
             string content = response.Content ?? "";
             string coursename = "";
             if (content != null)
             {
+                var restResponseChapter = new RestResponseChapter
+                {
+                    ChapterJsonContent = content
+                };
+
+                restResponseCourse?.ChapterList.Add(restResponseChapter);
+
                 ResponseChapter responseChapter = JsonSerializer.Deserialize<ResponseChapter>(content, options: caseInvariant) ?? new ResponseChapter();
                 coursename = responseChapter.List.Name;
                 int count = 0;
@@ -103,7 +118,7 @@ namespace piratechess_lib
                         Black = responseChapter.List.Title
                     };
 
-                    GetLine(Options.GetOptions(), pgnHeader, line.Id.ToString());
+                    GetLine(Options.GetOptions(), pgnHeader, line.Id.ToString(), restResponseChapter);
 
                     if (lines < _cumLines)
                     {
@@ -115,7 +130,7 @@ namespace piratechess_lib
             return coursename;
         }
 
-        private void GetLine(JsonSerializerOptions caseInvariant, PgnInfo pgnHeader, string oid, string json = "")
+        private void GetLine(JsonSerializerOptions caseInvariant, PgnInfo pgnHeader, string oid, RestResponseChapter restResponseChapter, string json = "")
         {
             string content = "";
             if (json == "")
@@ -125,6 +140,7 @@ namespace piratechess_lib
                 RestRequest request = GenerateRequest(_bearer, Method.Get);
 
                 RestResponse response = client.Execute(request);
+
                 content = response.Content ?? "";
             }
             else
@@ -134,6 +150,10 @@ namespace piratechess_lib
 
             if (content != null)
             {
+                restResponseChapter.ResponseLineList.Add(new RestResponseLine
+                {
+                    LineJsonContent = content
+                });
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
                 string? pgn = game?.Game?.GeneratePGN();
 

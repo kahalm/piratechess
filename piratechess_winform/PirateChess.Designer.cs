@@ -50,6 +50,8 @@
             comboBoxChapters = new ComboBox();
             labelBearer = new Label();
             textBoxBearer = new TextBox();
+            buttonSaveRestResponse = new Button();
+            buttonLoadRestResponse = new Button();
             SuspendLayout();
             // 
             // buttonParseAll
@@ -140,7 +142,7 @@
             // 
             // buttonSavePNG
             // 
-            buttonSavePNG.Location = new Point(799, 380);
+            buttonSavePNG.Location = new Point(799, 388);
             buttonSavePNG.Name = "buttonSavePNG";
             buttonSavePNG.Size = new Size(94, 29);
             buttonSavePNG.TabIndex = 20;
@@ -252,11 +254,33 @@
             textBoxBearer.Size = new Size(125, 27);
             textBoxBearer.TabIndex = 31;
             // 
+            // buttonSaveRestResponse
+            // 
+            buttonSaveRestResponse.Location = new Point(799, 423);
+            buttonSaveRestResponse.Name = "buttonSaveRestResponse";
+            buttonSaveRestResponse.Size = new Size(156, 29);
+            buttonSaveRestResponse.TabIndex = 33;
+            buttonSaveRestResponse.Text = "Save Raw Respone";
+            buttonSaveRestResponse.UseVisualStyleBackColor = true;
+            buttonSaveRestResponse.Click += buttonSaveRestResponse_Click;
+            // 
+            // buttonLoadRestResponse
+            // 
+            buttonLoadRestResponse.Location = new Point(799, 458);
+            buttonLoadRestResponse.Name = "buttonLoadRestResponse";
+            buttonLoadRestResponse.Size = new Size(156, 29);
+            buttonLoadRestResponse.TabIndex = 34;
+            buttonLoadRestResponse.Text = "Load Raw Respone";
+            buttonLoadRestResponse.UseVisualStyleBackColor = true;
+            buttonLoadRestResponse.Click += buttonLoadRestResponse_Click;
+            // 
             // PirateChess
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1293, 617);
+            Controls.Add(buttonLoadRestResponse);
+            Controls.Add(buttonSaveRestResponse);
             Controls.Add(labelBearer);
             Controls.Add(textBoxBearer);
             Controls.Add(comboBoxChapters);
@@ -309,5 +333,7 @@
         private ComboBox comboBoxChapters;
         private Label labelBearer;
         private TextBox textBoxBearer;
+        private Button buttonSaveRestResponse;
+        private Button buttonLoadRestResponse;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using RestSharp;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace piratechess_lib
@@ -206,14 +207,14 @@ namespace piratechess_lib
         {
             get
             {
-                return JwtHelper.ExtractUidFromToken(Jwt); 
+                return JwtHelper.ExtractUidFromToken(Jwt);
             }
         }
     }
 
     public partial class ResponseChapterList
     {
-        public JsonHomeData HomeData { get; set; } = new ();
+        public JsonHomeData HomeData { get; set; } = new();
     }
 
     public class JsonHomeData
@@ -225,5 +226,19 @@ namespace piratechess_lib
     {
         public int Bid { get; set; }
         public string Name { get; set; } = string.Empty;
+    }
+    public class RestResponseLine
+    {
+        public string? LineJsonContent { get; set; }
+    }
+    public class RestResponseChapter
+    {
+        public string? ChapterJsonContent { get; set; }
+        public List<RestResponseLine> ResponseLineList { get; set; } = [];
+    } 
+    public class RestResponseCourse
+    {
+        public string? CourseJsonContent { get; set; } 
+        public List<RestResponseChapter> ChapterList { get; set; } = [];
     }
 }
