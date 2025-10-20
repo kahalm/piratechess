@@ -21,7 +21,9 @@ Currently only exporting Moves & Text.
 
 Planned:
 * More Errorhandling (especially in the Maui version)
-* Export arrows and colours
+* For Puzzles add Trainingscomment
+* Klickable Variants
+* Export arrows and colours - Done
 
 If you need the Bearertoken use Developertools (Tab Network), Refresh the Dashboard. Look for getUserSettings and copy the value for Authorization (starts with Bearer). Use right cick and copy value, paste to any editor, copy everything after Bearer, this is your bearer token. 
 
