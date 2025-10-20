@@ -88,10 +88,42 @@ namespace piratechess_lib
                     pgn += $"{move.Move}. ";
                 }
                 pgn += move.San + " ";
+
+                pgn += "{";
+
+                var arrowList = move.Draws.Where(x => x.Object == "arrow").ToList();
+                var circleList = move.Draws.Where(x => x.Object == "circle").ToList();
+
+                if (arrowList.Count > 0)
+                {
+                    pgn += "[%cal ";
+                    var firstrun = true;
+                    foreach (JsonDraw draw in arrowList)
+                    {
+                        pgn += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}{draw.End}";
+                        firstrun = false;
+                    }
+                    pgn += "]";
+                }
+
+                if (circleList.Count > 0)
+                {
+                    pgn += "[%csl ";
+                    var firstrun = true;
+                    foreach (JsonDraw draw in circleList)
+                    {
+                        pgn += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}";
+                        firstrun = false;
+                    }
+                    pgn += "]";
+                }
+
                 if (move.CommentAfter != "")
                 {
-                    pgn += $"{{{move.CommentAfter}}} ";
+                    pgn += $"{move.CommentAfter}";
                 }
+
+                pgn += "} ";
                 lastMove = move.Move;
             }
             return pgn;
@@ -106,6 +138,18 @@ namespace piratechess_lib
         public string Before { get; set; } = string.Empty;
         public string CommentAfter { get; internal set; } = string.Empty;
         public string CommentBefore { get; internal set; } = string.Empty;
+
+        public List<JsonDraw> Draws { get; set; } = [];
+    }
+
+    public class JsonDraw
+    {
+        public string Object { get; set; } = string.Empty;
+        public string Start { get; set; } = string.Empty;
+        public string End { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public string Move { get; set; } = string.Empty;
+        public string Index { get; set; } = string.Empty;
     }
 
     public class JsonMoveItem
