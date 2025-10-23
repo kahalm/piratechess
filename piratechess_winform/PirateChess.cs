@@ -161,7 +161,7 @@ namespace piratechess_Winform
 
             if (radioButtonBearer.Checked)
             {
-                result = _pirate.LoginWithBearer(textBoxEmail.Text);
+                result = _pirate.LoginWithBearer(textBoxBearer.Text);
             }
             else
             {
