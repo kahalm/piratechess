@@ -148,6 +148,12 @@ namespace piratechess_lib
 
                     GetLine(Options.GetOptions(), pgnHeader, line.Id.ToString(), restResponseChapter, count, useLocalData);
 
+                    Random rand = new();
+                    if (!useLocalData)
+                    {
+                        System.Threading.Thread.Sleep(rand.Next(500, 1500));
+                    }
+
                     if (lines < _cumLines)
                     {
                         break;
