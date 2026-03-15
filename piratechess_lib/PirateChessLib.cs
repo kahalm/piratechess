@@ -10,6 +10,7 @@ namespace piratechess_lib
         private int _cumLines = 0;
         private Action<string>? _chapterCounterEvent;
         private Action<string>? _lineCounterEvent;
+        private Action<string>? _cumulativeLinesEvent;
         private readonly StringBuilder _pgn = new();
         private string _bearer = string.Empty;
         private string _uid = string.Empty;
@@ -202,6 +203,7 @@ namespace piratechess_lib
 
                 pgnHeader.FEN = game?.Game.Initial ?? "";
                 _cumLines++;
+                _cumulativeLinesEvent?.Invoke(_cumLines.ToString());
 
                 _ = (_pgn?.Append($"""
                         
@@ -382,6 +384,11 @@ namespace piratechess_lib
         public void SetLineCounterEvent(Action<string> setLineCounter)
         {
             _lineCounterEvent = setLineCounter;
+        }
+
+        public void SetCumulativeLinesEvent(Action<string> setCumulativeLines)
+        {
+            _cumulativeLinesEvent = setCumulativeLines;
         }
 
         public string ExtractUid(string jwt)

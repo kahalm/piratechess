@@ -51,6 +51,7 @@ namespace piratechess_Winform
 
             _pirate.SetChapterCounterEvent(SetChapterCounter);
             _pirate.SetLineCounterEvent(SetLineCounter);
+            _pirate.SetCumulativeLinesEvent(SetCumulativeLinesCounter);
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
@@ -72,6 +73,7 @@ namespace piratechess_Winform
             SetButtonsEnabledState(false);
             var bid = (string?)comboBoxChapters.SelectedValue ?? "";
             textBoxPGN.Text = "";
+            textBoxCurLines.Text = "0";
             textBoxCumulativeLines.Text = "0";
 
             new Thread(() =>
@@ -108,8 +110,15 @@ namespace piratechess_Winform
         {
             Invoke(new Action(() =>
             {
-                textBoxCumulativeLines.Text = lineCounter;
+                textBoxCurLines.Text = lineCounter;
+            }));
+        }
 
+        public void SetCumulativeLinesCounter(string cumLines)
+        {
+            Invoke(new Action(() =>
+            {
+                textBoxCumulativeLines.Text = cumLines;
             }));
         }
 
