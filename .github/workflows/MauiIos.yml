@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-maui-ios:
-    runs-on: macos-latest  # MAUI iOS benötigt macOS + Xcode
+    runs-on: macos-16  # Xcode 26 für iOS 26 MAUI workloads
       
     steps:
       - name: Repository auschecken
@@ -17,10 +17,10 @@ jobs:
       - name: .NET SDK einrichten
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.200'
+          dotnet-version: '9.0'
   
       - name: MAUI workloads installieren
-        run: dotnet workload install maui --skip-manifest-update
+        run: dotnet workload install maui
   
       - name: iOS-Projekt kompilieren für Simulator
         run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-ios -c Debug -r iossimulator-x64

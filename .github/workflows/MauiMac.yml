@@ -8,7 +8,7 @@ on:
   
 jobs:
   build-maui-macos:
-    runs-on: macos-latest  # macOS-Build für MAUI
+    runs-on: macos-16  # Xcode 26 für MAUI macOS workloads
 
     steps:
       - name: Repository auschecken
@@ -17,10 +17,10 @@ jobs:
       - name: .NET SDK einrichten für MAUI (macOS)
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.200'
+          dotnet-version: '9.0'
 
       - name: MAUI workloads installieren
-        run: dotnet workload install maui --skip-manifest-update
+        run: dotnet workload install maui
 
       - name: Build MAUI Projekt für macOS Catalyst
         run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst -p:EnableCodeSigning=false
