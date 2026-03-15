@@ -6,7 +6,7 @@ namespace piratechess_Winform
     class INIFileHandler
     {
         // Method to write string values to an INI file
-        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3, string key4, string value4, string key5, string value5)
+        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3, string key4, string value4, string key5, string value5, string key6 = "", string value6 = "")
         {
             StringBuilder iniContent = new();
 
@@ -19,13 +19,15 @@ namespace piratechess_Winform
             iniContent.AppendLine($"{key3}={value3}");
             iniContent.AppendLine($"{key4}={value4}");
             iniContent.AppendLine($"{key5}={value5}");
+            if (!string.IsNullOrEmpty(key6))
+                iniContent.AppendLine($"{key6}={value6}");
 
             // Write to the file
             File.WriteAllText(filePath, iniContent.ToString());
         }
 
         // Method to read string values from an INI file
-        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3, string key4, string key5)
+        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3, string key4, string key5, string key6 = "")
         {
             if (!File.Exists(filePath))
             {
@@ -35,7 +37,7 @@ namespace piratechess_Winform
 
             string[] lines = File.ReadAllLines(filePath);
             string currentSection = "";
-            string value1 = "", value2 = "", value3 = "", value4 = "", value5 = "";
+            string value1 = "", value2 = "", value3 = "", value4 = "", value5 = "", value6 = "";
 
             foreach (var line in lines)
             {
@@ -52,20 +54,18 @@ namespace piratechess_Winform
                 // If we're in the right section, check for key-value pairs
                 if (currentSection == section)
                 {
-                    if (line.StartsWith(key1))
-                        value1 = line.Split('=')[1];
-                    else if (line.StartsWith(key2))
-                        value2 = line.Split('=')[1];
-                    else if (line.StartsWith(key3))
-                        value3 = line.Split('=')[1];
-                    else if (line.StartsWith(key4))
-                        value4 = line.Split('=')[1];
-                    else if (line.StartsWith(key5))
-                        value5 = line.Split('=')[1];
+                    var parts = line.Split('=', 2);
+                    if (parts.Length < 2) continue;
+                    string k = parts[0], v = parts[1];
+                    if (k == key1) value1 = v;
+                    else if (k == key2) value2 = v;
+                    else if (k == key3) value3 = v;
+                    else if (k == key4) value4 = v;
+                    else if (k == key5) value5 = v;
+                    else if (!string.IsNullOrEmpty(key6) && k == key6) value6 = v;
                 }
             }
 
-            // Display read values
             Dictionary<string, string> dict = new()
             {
                 { key1, value1 },
@@ -74,6 +74,8 @@ namespace piratechess_Winform
                 { key4, value4 },
                 { key5, value5 }
             };
+            if (!string.IsNullOrEmpty(key6))
+                dict[key6] = value6;
 
             return dict;
         }

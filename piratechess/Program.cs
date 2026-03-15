@@ -1,8 +1,27 @@
 using piratechess_lib;
 using System.Text.Json;
 
-string rawDir = Path.GetFullPath("rawresponses");
-string pgnDir = Path.GetFullPath("pgn");
+string exportBase = "";
+string iniPath = Path.Combine(AppContext.BaseDirectory, "settings.ini");
+if (File.Exists(iniPath))
+{
+    foreach (var line in File.ReadAllLines(iniPath))
+    {
+        var parts = line.Split('=', 2);
+        if (parts.Length == 2 && parts[0].Trim() == "exportFolder")
+        {
+            exportBase = parts[1].Trim();
+            break;
+        }
+    }
+}
+if (string.IsNullOrEmpty(exportBase) || !Directory.Exists(exportBase))
+    exportBase = Directory.GetCurrentDirectory();
+
+string rawDir = Path.Combine(exportBase, "rawresponses");
+string pgnDir = Path.Combine(exportBase, "pgn");
+Directory.CreateDirectory(rawDir);
+Directory.CreateDirectory(pgnDir);
 
 IEnumerable<string> files = args.Length > 0
     ? args.Select(Path.GetFullPath)

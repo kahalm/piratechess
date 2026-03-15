@@ -9,6 +9,7 @@
         public static string key3 = "bearer";
         public static string key4 = "email";
         public static string key5 = "pwd";
+        public static string key6 = "exportFolder";
 
     }
 }

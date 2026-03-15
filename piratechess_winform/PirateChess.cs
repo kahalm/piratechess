@@ -7,6 +7,7 @@ namespace piratechess_Winform
     public partial class PirateChess : Form, IDisposable
     {
         private string _coursename = string.Empty;
+        private string _exportFolder = string.Empty;
         private readonly PirateChessLib _pirate = new();
         public PirateChess()
         {
@@ -14,7 +15,7 @@ namespace piratechess_Winform
 
 
             // Read values from INI
-            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3, Options.key4, Options.key5);
+            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3, Options.key4, Options.key5, Options.key6);
             /* if (!settings.TryGetValue(Options.key1, out string? value1))
              {
                  value1 = "";
@@ -35,6 +36,10 @@ namespace piratechess_Winform
             {
                 value5 = "";
             }
+            if (!settings.TryGetValue(Options.key6, out string? value6))
+            {
+                value6 = "";
+            }
 
             if (value2 == "1")
             {
@@ -47,6 +52,7 @@ namespace piratechess_Winform
             textBoxBearer.Text = value3;
             textBoxEmail.Text = value4;
             textBoxPwd.Text = value5;
+            _exportFolder = value6;
 
             setEditVisibility();
 
@@ -59,17 +65,35 @@ namespace piratechess_Winform
         {
             // Write values to INI
             INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, "",
-                Options.key2, radioButtonBearer.Checked ? "1" : "", Options.key3, textBoxBearer.Text, Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text);
+                Options.key2, radioButtonBearer.Checked ? "1" : "", Options.key3, textBoxBearer.Text, Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text,
+                Options.key6, _exportFolder);
 
             base.OnFormClosed(e);
         }
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            LoadLines(autoExport: true);
+            int count = checkedListBoxChapters.CheckedItems.Count;
+            var confirm = MessageBox.Show(
+                $"Wollen Sie {count} Kurs{(count == 1 ? "" : "e")} exportieren?",
+                "Export bestätigen",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes)
+                return;
+
+            using var folderDialog = new FolderBrowserDialog();
+            folderDialog.Description = "Export-Basisordner auswählen";
+            if (!string.IsNullOrEmpty(_exportFolder) && Directory.Exists(_exportFolder))
+                folderDialog.InitialDirectory = _exportFolder;
+            if (folderDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            _exportFolder = folderDialog.SelectedPath;
+            LoadLines(autoExport: true, exportFolder: _exportFolder);
         }
 
-        private void LoadLines(bool useLocalData = false, int maxLines = 10000, bool autoExport = false)
+        private void LoadLines(bool useLocalData = false, int maxLines = 10000, bool autoExport = false, string exportFolder = "")
         {
             SetButtonsEnabledState(false);
             var selectedBids = checkedListBoxChapters.CheckedItems
@@ -112,8 +136,12 @@ namespace piratechess_Winform
                         if (autoExport && !string.IsNullOrEmpty(_coursename))
                         {
                             string safeName = string.Concat(_coursename.Split(Path.GetInvalidFileNameChars()));
-                            File.WriteAllText(Path.Combine(Path.GetFullPath("pgn"), safeName + ".pgn"), pgn ?? "");
-                            File.WriteAllText(Path.Combine(Path.GetFullPath("rawresponses"), safeName + ".restResponse"),
+                            string pgnDir = Path.Combine(exportFolder, "pgn");
+                            string rawDir = Path.Combine(exportFolder, "rawresponses");
+                            Directory.CreateDirectory(pgnDir);
+                            Directory.CreateDirectory(rawDir);
+                            File.WriteAllText(Path.Combine(pgnDir, safeName + ".pgn"), pgn ?? "");
+                            File.WriteAllText(Path.Combine(rawDir, safeName + ".restResponse"),
                                 JsonSerializer.Serialize(_pirate.restResponseCourse));
                         }
                     }
