@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-maui-ios:
-    runs-on: macos-16  # Xcode 26 für iOS 26 MAUI workloads
+    runs-on: macos-26  # Xcode 26 für iOS 26 MAUI workloads
       
     steps:
       - name: Repository auschecken
