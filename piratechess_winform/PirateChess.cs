@@ -135,9 +135,8 @@ namespace piratechess_Winform
 
         private void ButtonSavePNG_Click(object sender, EventArgs e)
         {
-            // Create a SaveFileDialog to allow the user to choose the save location
             using SaveFileDialog saveFileDialog = new();
-            // Set the default file name
+            saveFileDialog.InitialDirectory = Path.GetFullPath("pgn");
 
             string invalidChars = new(Path.GetInvalidFileNameChars());
             string sanitizedFilename = string.Concat(_coursename.Split(invalidChars.ToCharArray()));
@@ -257,9 +256,8 @@ namespace piratechess_Winform
 
         private void buttonSaveRestResponse_Click(object sender, EventArgs e)
         {
-            // Create a SaveFileDialog to allow the user to choose the save location
             using SaveFileDialog saveFileDialog = new();
-            // Set the default file name
+            saveFileDialog.InitialDirectory = Path.GetFullPath("rawresponses");
 
             string invalidChars = new(Path.GetInvalidFileNameChars());
             string sanitizedFilename = string.Concat(_coursename.Split(invalidChars.ToCharArray()));
@@ -289,6 +287,7 @@ namespace piratechess_Winform
         private void buttonLoadRestResponse_Click(object sender, EventArgs e)
         {
             using OpenFileDialog openFileDialog = new();
+            openFileDialog.InitialDirectory = Path.GetFullPath("rawresponses");
             openFileDialog.Filter = "RRF files (*.restResponse)|*.restResponse|All files (*.*)|*.*";
             openFileDialog.Title = "Load Rest Response";
 
