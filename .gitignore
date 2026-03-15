@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Raw JSON responses (local only)
+rawresponses/*
+!rawresponses/.gitkeep
