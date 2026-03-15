@@ -23,5 +23,5 @@ jobs:
         run: dotnet workload install maui
   
       - name: iOS-Projekt kompilieren für Simulator
-        run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-ios -c Release -r ios-arm64
+        run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-ios -c Debug -r iossimulator-x64
         
