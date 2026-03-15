@@ -4,11 +4,12 @@ namespace piratechess_lib
 {
     internal class Options
     {
-
-        public static JsonSerializerOptions GetOptions() => new()
+        private static readonly JsonSerializerOptions _options = new()
         {
             PropertyNameCaseInsensitive = true
         };
+
+        public static JsonSerializerOptions GetOptions() => _options;
     }
 
     internal class PgnInfo

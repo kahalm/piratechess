@@ -60,9 +60,23 @@ namespace piratechess_lib
                 if (move.After is not null and not "")
                 {
                     ResponseMove? responseMoveAfter = JsonSerializer.Deserialize<ResponseMove>(move.After, options: Options.GetOptions());
+                    var variant = false;
+                    var level = 0;
                     if (responseMoveAfter != null && responseMoveAfter.Data != null)
-                    {
-                        move.CommentAfter = string.Join(Environment.NewLine, responseMoveAfter.Data.Select(x => x.CommentAfter).ToList());
+                    {                        
+                        foreach (var data in responseMoveAfter.Data)
+                        {
+                            if (data.Key == "C")
+                            {
+                                var comment = data.CommentAfter;
+                            }
+                            else if (data.Key == "V")
+                            {
+                                variant = true;
+                            }
+                        }
+
+                            move.CommentAfter = string.Join(Environment.NewLine, responseMoveAfter.Data.Select(x => x.CommentAfter).ToList());
                     }
                 }
 
@@ -89,41 +103,45 @@ namespace piratechess_lib
                 }
                 pgn += move.San + " ";
 
-                pgn += "{";
-
                 var arrowList = move.Draws.Where(x => x.Object == "arrow").ToList();
                 var circleList = move.Draws.Where(x => x.Object == "circle").ToList();
 
+                string annotation = "";
+
                 if (arrowList.Count > 0)
                 {
-                    pgn += "[%cal ";
+                    annotation += "[%cal ";
                     var firstrun = true;
                     foreach (JsonDraw draw in arrowList)
                     {
-                        pgn += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}{draw.End}";
+                        annotation += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}{draw.End}";
                         firstrun = false;
                     }
-                    pgn += "]";
+                    annotation += "]";
                 }
 
                 if (circleList.Count > 0)
                 {
-                    pgn += "[%csl ";
+                    annotation += "[%csl ";
                     var firstrun = true;
                     foreach (JsonDraw draw in circleList)
                     {
-                        pgn += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}";
+                        annotation += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}";
                         firstrun = false;
                     }
-                    pgn += "]";
+                    annotation += "]";
                 }
 
                 if (move.CommentAfter != "")
                 {
-                    pgn += $"{move.CommentAfter}";
+                    annotation += move.CommentAfter;
                 }
 
-                pgn += "} ";
+                if (annotation != "")
+                {
+                    pgn += $"{{{annotation}}} ";
+                }
+
                 lastMove = move.Move;
             }
             return pgn;
@@ -180,9 +198,9 @@ namespace piratechess_lib
                 else
                 if (Val.Value.ValueKind == JsonValueKind.Array)
                 {
-                    List<string>? innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions())?.Select(x => x.CommentAfter).ToList();
+                    List<JsonMoveItemList> innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions())?.ToList() ?? new List<JsonMoveItemList>() ;
 
-                    comment = string.Join(Environment.NewLine, innerList ?? [""]);
+                    comment = string.Join(Environment.NewLine, innerList.Select(x => x.CommentAfter) ?? [""]);
                 }
                 else
                 {
