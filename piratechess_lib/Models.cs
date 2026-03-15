@@ -1,4 +1,5 @@
-﻿using RestSharp;
+﻿using ChessDotNet;
+using RestSharp;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -92,6 +93,21 @@ namespace piratechess_lib
                     }
                 }
             }
+            string? uci = GetFirstKeyMoveUci(sortedMoves);
+            bool prevKey = false;
+            foreach (JsonMove move in sortedMoves.Values)
+            {
+                if (move.IsKey && !prevKey)
+                {
+                    string trainingComment = $"[%tqu \"En\",\"find the move\",\"\",\"\",\"{uci ?? ""}\",\"\",10]";
+                    move.CommentBefore = move.CommentBefore == ""
+                        ? trainingComment
+                        : trainingComment + "\n" + move.CommentBefore;
+                    break;
+                }
+                prevKey = move.IsKey;
+            }
+
             int lastMove = 0;
             foreach (JsonMove move in sortedMoves.Values)
             {
@@ -154,6 +170,59 @@ namespace piratechess_lib
             }
             return pgn;
         }
+
+        private string? GetFirstKeyMoveUci(SortedList<int, JsonMove> sortedMoves)
+        {
+            try
+            {
+                var sb = new StringBuilder();
+                var fenParts = (Initial ?? "").Split(' ');
+                bool blackFirst = fenParts.Length > 1 && fenParts[1] == "b";
+
+                int lastMoveNum = 0;
+                bool firstOutput = false;
+                foreach (var m in sortedMoves.Values)
+                {
+                    if (m.Move > lastMoveNum)
+                    {
+                        sb.Append($"{m.Move}. ");
+                        if (!firstOutput && blackFirst)
+                            sb.Append("... ");
+                        lastMoveNum = m.Move;
+                    }
+                    firstOutput = true;
+                    sb.Append($"{m.San} ");
+                }
+                sb.Append("*");
+
+                var reader = new PgnReader<ChessGame>();
+                reader.ReadPgnFromString(sb.ToString());
+                var gameMoves = reader.Game.Moves;
+
+                var allMoves = sortedMoves.Values.ToList();
+                bool prevKey = false;
+                for (int i = 0; i < allMoves.Count; i++)
+                {
+                    if (allMoves[i].IsKey && !prevKey)
+                    {
+                        if (i >= gameMoves.Count) return null;
+                        var km = gameMoves[i];
+                        char ff = char.ToLower(km.OriginalPosition.File.ToString()[0]);
+                        int fr = km.OriginalPosition.Rank;
+                        char tf = char.ToLower(km.NewPosition.File.ToString()[0]);
+                        int tr = km.NewPosition.Rank;
+                        string uciStr = $"{ff}{fr}{tf}{tr}";
+                        int eqIdx = allMoves[i].San.IndexOf('=');
+                        if (eqIdx >= 0 && eqIdx + 1 < allMoves[i].San.Length)
+                            uciStr += char.ToLower(allMoves[i].San[eqIdx + 1]);
+                        return uciStr;
+                    }
+                    prevKey = allMoves[i].IsKey;
+                }
+            }
+            catch { }
+            return null;
+        }
     }
     public class JsonMove
     {
@@ -166,6 +235,7 @@ namespace piratechess_lib
         public string CommentBefore { get; internal set; } = string.Empty;
         public string CommentVariations { get; internal set; } = string.Empty;
 
+        public bool IsKey { get; set; }
         public List<JsonDraw> Draws { get; set; } = [];
     }
 
@@ -271,19 +341,41 @@ namespace piratechess_lib
                 return "";
 
             var innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions()) ?? [];
+            var variations = new List<string>();
             var sb = new StringBuilder("(");
             string pendingComment = "";
+            int lastWhiteMoveNum = 0;
 
             foreach (var item in innerList)
             {
                 if (item.Key == "S" && item.Val != null && item.Val.Value.ValueKind == JsonValueKind.String)
                 {
+                    string san = item.Val.Value.GetString() ?? "";
+                    var m = findWhiteMoveNumber().Match(san);
+                    if (m.Success)
+                    {
+                        int moveNum = int.Parse(m.Groups[1].Value);
+                        if (moveNum <= lastWhiteMoveNum)
+                        {
+                            // New alternative line — close current variation and start a new one
+                            if (pendingComment != "")
+                            {
+                                sb.Append($"{{{pendingComment}}}");
+                                pendingComment = "";
+                            }
+                            variations.Add(sb.ToString().TrimEnd() + ")");
+                            sb = new StringBuilder("(");
+                            lastWhiteMoveNum = 0;
+                        }
+                        lastWhiteMoveNum = moveNum;
+                    }
+
                     if (pendingComment != "")
                     {
                         sb.Append($"{{{pendingComment}}} ");
                         pendingComment = "";
                     }
-                    sb.Append(item.Val.Value.GetString());
+                    sb.Append(san);
                     sb.Append(' ');
                 }
                 else if (item.Key == "C")
@@ -307,8 +399,12 @@ namespace piratechess_lib
             if (pendingComment != "")
                 sb.Append($"{{{pendingComment}}}");
 
-            return sb.ToString().TrimEnd() + ")";
+            variations.Add(sb.ToString().TrimEnd() + ")");
+            return string.Join(" ", variations);
         }
+
+        [GeneratedRegex(@"^(\d+)\.(?!\.)")]
+        private static partial Regex findWhiteMoveNumber();
 
         [GeneratedRegex("<[^>]*>")]
         private static partial Regex findHtmltags();
