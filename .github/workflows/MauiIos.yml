@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '9.0.200'
   
       - name: MAUI workloads installieren
-        run: dotnet workload install maui
+        run: dotnet workload install maui --skip-manifest-update
   
       - name: iOS-Projekt kompilieren für Simulator
         run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-ios -c Debug -r iossimulator-x64
