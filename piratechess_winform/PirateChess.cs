@@ -1,4 +1,5 @@
 ﻿using piratechess_lib;
+using System.Text;
 using System.Text.Json;
 
 namespace piratechess_Winform
@@ -65,31 +66,68 @@ namespace piratechess_Winform
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            LoadLines();
+            LoadLines(autoExport: true);
         }
 
-        private void LoadLines(bool useLocalData = false, int maxLines = 10000)
+        private void LoadLines(bool useLocalData = false, int maxLines = 10000, bool autoExport = false)
         {
             SetButtonsEnabledState(false);
-            var bid = (string?)comboBoxChapters.SelectedValue ?? "";
+            var selectedBids = checkedListBoxChapters.CheckedItems
+                .Cast<KeyValuePair<string, string>>()
+                .Select(kv => kv.Key)
+                .ToList();
             textBoxPGN.Text = "";
             textBoxCurLines.Text = "0";
             textBoxCumulativeLines.Text = "0";
 
             new Thread(() =>
             {
-                (string? pgn, _coursename) = _pirate.GetCourse(bid, maxLines, useLocalData);
+                var allPgn = new StringBuilder();
+                if (useLocalData)
+                {
+                    (string? pgn, _coursename) = _pirate.GetCourse("", maxLines, useLocalData: true);
+                    allPgn.Append(pgn);
+                }
+                else
+                {
+                    for (int courseIdx = 0; courseIdx < selectedBids.Count; courseIdx++)
+                    {
+                        var bid = selectedBids[courseIdx];
+                        Invoke(new Action(() =>
+                        {
+                            textBoxCourse.Text = $"{courseIdx + 1}/{selectedBids.Count}";
+                            for (int i = 0; i < checkedListBoxChapters.Items.Count; i++)
+                            {
+                                if (((KeyValuePair<string, string>)checkedListBoxChapters.Items[i]).Key == bid)
+                                {
+                                    checkedListBoxChapters.SelectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }));
+
+                        (string? pgn, _coursename) = _pirate.GetCourse(bid, maxLines);
+                        allPgn.Append(pgn);
+
+                        if (autoExport && !string.IsNullOrEmpty(_coursename))
+                        {
+                            string safeName = string.Concat(_coursename.Split(Path.GetInvalidFileNameChars()));
+                            File.WriteAllText(Path.Combine(Path.GetFullPath("pgn"), safeName + ".pgn"), pgn ?? "");
+                            File.WriteAllText(Path.Combine(Path.GetFullPath("rawresponses"), safeName + ".restResponse"),
+                                JsonSerializer.Serialize(_pirate.restResponseCourse));
+                        }
+                    }
+                }
 
                 Invoke(new Action(() =>
                 {
-                    textBoxPGN.Text = pgn;
+                    textBoxPGN.Text = allPgn.ToString();
                     SetButtonsEnabledState(true);
                 }));
 
                 MessageBox.Show("Finished.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.None,
-         MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
+                    MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
             }).Start();
-
         }
 
         private void ButtonFirstTenLines_Click_1(object sender, EventArgs e)
@@ -235,23 +273,28 @@ namespace piratechess_Winform
                 tmp.Add((chapter.Key, chapter.Value));
             }
 
-            comboBoxChapters.DataSource = new BindingSource(chapters, "");
-            comboBoxChapters.DisplayMember = "Value";
-            comboBoxChapters.ValueMember = "Key";
+            checkedListBoxChapters.DataSource = new BindingSource(chapters, "");
+            checkedListBoxChapters.DisplayMember = "Value";
+            checkedListBoxChapters.ValueMember = "Key";
         }
 
-        private void ComboBoxChapters_SelectedIndexChanged(object sender, EventArgs e)
+        private void CheckedListBoxChapters_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            if (comboBoxChapters.SelectedValue is not null and not (object)"")
-            {
-                buttonFirstTenLines.Enabled = true;
-                buttonParseAll.Enabled = true;
-            }
-            else
-            {
-                buttonFirstTenLines.Enabled = false;
-                buttonParseAll.Enabled = false;
-            }
+            int checkedAfter = checkedListBoxChapters.CheckedItems.Count
+                + (e.NewValue == CheckState.Checked ? 1 : -1);
+            buttonFirstTenLines.Enabled = checkedAfter > 0;
+            buttonParseAll.Enabled = checkedAfter > 0;
+            buttonSelectAll.Text = checkedAfter == checkedListBoxChapters.Items.Count ? "Select None" : "Select All";
+        }
+
+        private void ButtonSelectAll_Click(object sender, EventArgs e)
+        {
+            bool selectAll = buttonSelectAll.Text == "Select All";
+            for (int i = 0; i < checkedListBoxChapters.Items.Count; i++)
+                checkedListBoxChapters.SetItemChecked(i, selectAll);
+            buttonSelectAll.Text = selectAll ? "Select None" : "Select All";
+            buttonFirstTenLines.Enabled = selectAll;
+            buttonParseAll.Enabled = selectAll;
         }
 
         private void buttonSaveRestResponse_Click(object sender, EventArgs e)

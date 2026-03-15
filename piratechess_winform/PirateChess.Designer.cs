@@ -47,11 +47,14 @@
             radioButtonLogin = new RadioButton();
             radioButtonBearer = new RadioButton();
             buttonLoadChapters = new Button();
-            comboBoxChapters = new ComboBox();
+            checkedListBoxChapters = new CheckedListBox();
+            buttonSelectAll = new Button();
             labelBearer = new Label();
             textBoxBearer = new TextBox();
             buttonSaveRestResponse = new Button();
             buttonLoadRestResponse = new Button();
+            labelCourse = new Label();
+            textBoxCourse = new TextBox();
             SuspendLayout();
             // 
             // buttonParseAll
@@ -72,11 +75,29 @@
             textBoxPGN.Name = "textBoxPGN";
             textBoxPGN.Size = new Size(309, 268);
             textBoxPGN.TabIndex = 1;
-            // 
+            //
+            // labelCourse
+            //
+            labelCourse.AutoSize = true;
+            labelCourse.Location = new Point(676, 332);
+            labelCourse.Name = "labelCourse";
+            labelCourse.Size = new Size(49, 20);
+            labelCourse.TabIndex = 36;
+            labelCourse.Text = "course";
+            //
+            // textBoxCourse
+            //
+            textBoxCourse.Enabled = false;
+            textBoxCourse.Location = new Point(760, 329);
+            textBoxCourse.Name = "textBoxCourse";
+            textBoxCourse.Size = new Size(125, 27);
+            textBoxCourse.TabIndex = 37;
+            textBoxCourse.Text = "0/0";
+            //
             // labelDurchlauf
-            // 
+            //
             labelDurchlauf.AutoSize = true;
-            labelDurchlauf.Location = new Point(46, 269);
+            labelDurchlauf.Location = new Point(676, 362);
             labelDurchlauf.Name = "labelDurchlauf";
             labelDurchlauf.Size = new Size(59, 20);
             labelDurchlauf.TabIndex = 13;
@@ -85,7 +106,7 @@
             // textBoxDurchlauf
             // 
             textBoxDurchlauf.Enabled = false;
-            textBoxDurchlauf.Location = new Point(126, 269);
+            textBoxDurchlauf.Location = new Point(760, 359);
             textBoxDurchlauf.Name = "textBoxDurchlauf";
             textBoxDurchlauf.Size = new Size(125, 27);
             textBoxDurchlauf.TabIndex = 12;
@@ -94,7 +115,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(46, 304);
+            label4.Location = new Point(676, 392);
             label4.Name = "label4";
             label4.Size = new Size(39, 20);
             label4.TabIndex = 16;
@@ -104,7 +125,7 @@
             // 
             textBoxCurLines.AccessibleRole = AccessibleRole.None;
             textBoxCurLines.Enabled = false;
-            textBoxCurLines.Location = new Point(126, 304);
+            textBoxCurLines.Location = new Point(760, 389);
             textBoxCurLines.Name = "textBoxCurLines";
             textBoxCurLines.Size = new Size(125, 27);
             textBoxCurLines.TabIndex = 15;
@@ -124,7 +145,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(46, 337);
+            label5.Location = new Point(676, 422);
             label5.Name = "label5";
             label5.Size = new Size(74, 20);
             label5.TabIndex = 19;
@@ -134,7 +155,7 @@
             // 
             textBoxCumulativeLines.AccessibleRole = AccessibleRole.None;
             textBoxCumulativeLines.Enabled = false;
-            textBoxCumulativeLines.Location = new Point(126, 337);
+            textBoxCumulativeLines.Location = new Point(760, 419);
             textBoxCumulativeLines.Name = "textBoxCumulativeLines";
             textBoxCumulativeLines.Size = new Size(125, 27);
             textBoxCumulativeLines.TabIndex = 18;
@@ -142,7 +163,7 @@
             // 
             // buttonSavePNG
             // 
-            buttonSavePNG.Location = new Point(799, 388);
+            buttonSavePNG.Location = new Point(799, 458);
             buttonSavePNG.Name = "buttonSavePNG";
             buttonSavePNG.Size = new Size(94, 29);
             buttonSavePNG.TabIndex = 20;
@@ -227,16 +248,26 @@
             buttonLoadChapters.Text = "fill Chapters";
             buttonLoadChapters.UseVisualStyleBackColor = true;
             buttonLoadChapters.Click += ButtonLoadChapters_Click;
-            // 
-            // comboBoxChapters
-            // 
-            comboBoxChapters.FormattingEnabled = true;
-            comboBoxChapters.Location = new Point(46, 221);
-            comboBoxChapters.Margin = new Padding(3, 4, 3, 4);
-            comboBoxChapters.Name = "comboBoxChapters";
-            comboBoxChapters.Size = new Size(499, 28);
-            comboBoxChapters.TabIndex = 30;
-            comboBoxChapters.SelectedIndexChanged += ComboBoxChapters_SelectedIndexChanged;
+            //
+            // checkedListBoxChapters
+            //
+            checkedListBoxChapters.FormattingEnabled = true;
+            checkedListBoxChapters.Location = new Point(46, 221);
+            checkedListBoxChapters.Margin = new Padding(3, 4, 3, 4);
+            checkedListBoxChapters.Name = "checkedListBoxChapters";
+            checkedListBoxChapters.Size = new Size(469, 160);
+            checkedListBoxChapters.TabIndex = 30;
+            checkedListBoxChapters.ItemCheck += CheckedListBoxChapters_ItemCheck;
+            //
+            // buttonSelectAll
+            //
+            buttonSelectAll.Location = new Point(520, 221);
+            buttonSelectAll.Name = "buttonSelectAll";
+            buttonSelectAll.Size = new Size(100, 29);
+            buttonSelectAll.TabIndex = 35;
+            buttonSelectAll.Text = "Select All";
+            buttonSelectAll.UseVisualStyleBackColor = true;
+            buttonSelectAll.Click += ButtonSelectAll_Click;
             // 
             // labelBearer
             // 
@@ -256,7 +287,7 @@
             // 
             // buttonSaveRestResponse
             // 
-            buttonSaveRestResponse.Location = new Point(799, 423);
+            buttonSaveRestResponse.Location = new Point(799, 493);
             buttonSaveRestResponse.Name = "buttonSaveRestResponse";
             buttonSaveRestResponse.Size = new Size(156, 29);
             buttonSaveRestResponse.TabIndex = 33;
@@ -266,7 +297,7 @@
             // 
             // buttonLoadRestResponse
             // 
-            buttonLoadRestResponse.Location = new Point(799, 458);
+            buttonLoadRestResponse.Location = new Point(799, 528);
             buttonLoadRestResponse.Name = "buttonLoadRestResponse";
             buttonLoadRestResponse.Size = new Size(156, 29);
             buttonLoadRestResponse.TabIndex = 34;
@@ -283,7 +314,8 @@
             Controls.Add(buttonSaveRestResponse);
             Controls.Add(labelBearer);
             Controls.Add(textBoxBearer);
-            Controls.Add(comboBoxChapters);
+            Controls.Add(checkedListBoxChapters);
+            Controls.Add(buttonSelectAll);
             Controls.Add(buttonLoadChapters);
             Controls.Add(radioButtonBearer);
             Controls.Add(radioButtonLogin);
@@ -298,6 +330,8 @@
             Controls.Add(buttonFirstTenLines);
             Controls.Add(label4);
             Controls.Add(textBoxCurLines);
+            Controls.Add(labelCourse);
+            Controls.Add(textBoxCourse);
             Controls.Add(labelDurchlauf);
             Controls.Add(textBoxDurchlauf);
             Controls.Add(textBoxPGN);
@@ -330,10 +364,13 @@
         private RadioButton radioButtonLogin;
         private RadioButton radioButtonBearer;
         private Button buttonLoadChapters;
-        private ComboBox comboBoxChapters;
+        private CheckedListBox checkedListBoxChapters;
+        private Button buttonSelectAll;
         private Label labelBearer;
         private TextBox textBoxBearer;
         private Button buttonSaveRestResponse;
         private Button buttonLoadRestResponse;
+        private Label labelCourse;
+        private TextBox textBoxCourse;
     }
 }
