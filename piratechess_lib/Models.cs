@@ -1,4 +1,5 @@
 ﻿using RestSharp;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -60,23 +61,25 @@ namespace piratechess_lib
                 if (move.After is not null and not "")
                 {
                     ResponseMove? responseMoveAfter = JsonSerializer.Deserialize<ResponseMove>(move.After, options: Options.GetOptions());
-                    var variant = false;
-                    var level = 0;
                     if (responseMoveAfter != null && responseMoveAfter.Data != null)
-                    {                        
+                    {
+                        var comments = new List<string>();
+                        var variations = new List<string>();
                         foreach (var data in responseMoveAfter.Data)
                         {
                             if (data.Key == "C")
                             {
-                                var comment = data.CommentAfter;
+                                string c = data.CommentAfter;
+                                if (c != "") comments.Add(c);
                             }
                             else if (data.Key == "V")
                             {
-                                variant = true;
+                                string v = data.GetVariationPgn();
+                                if (v != "") variations.Add(v);
                             }
                         }
-
-                            move.CommentAfter = string.Join(Environment.NewLine, responseMoveAfter.Data.Select(x => x.CommentAfter).ToList());
+                        move.CommentAfter = string.Join(" ", comments);
+                        move.CommentVariations = string.Join(" ", variations);
                     }
                 }
 
@@ -142,6 +145,11 @@ namespace piratechess_lib
                     pgn += $"{{{annotation}}} ";
                 }
 
+                if (move.CommentVariations != "")
+                {
+                    pgn += move.CommentVariations + " ";
+                }
+
                 lastMove = move.Move;
             }
             return pgn;
@@ -156,6 +164,7 @@ namespace piratechess_lib
         public string Before { get; set; } = string.Empty;
         public string CommentAfter { get; internal set; } = string.Empty;
         public string CommentBefore { get; internal set; } = string.Empty;
+        public string CommentVariations { get; internal set; } = string.Empty;
 
         public List<JsonDraw> Draws { get; set; } = [];
     }
@@ -254,6 +263,51 @@ namespace piratechess_lib
 
                 return ReplaceCommentStuff(comment);
             }
+        }
+
+        public string GetVariationPgn()
+        {
+            if (Key != "V" || Val == null || Val.Value.ValueKind != JsonValueKind.Array)
+                return "";
+
+            var innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions()) ?? [];
+            var sb = new StringBuilder("(");
+            string pendingComment = "";
+
+            foreach (var item in innerList)
+            {
+                if (item.Key == "S" && item.Val != null && item.Val.Value.ValueKind == JsonValueKind.String)
+                {
+                    if (pendingComment != "")
+                    {
+                        sb.Append($"{{{pendingComment}}} ");
+                        pendingComment = "";
+                    }
+                    sb.Append(item.Val.Value.GetString());
+                    sb.Append(' ');
+                }
+                else if (item.Key == "C")
+                {
+                    string c = item.CommentAfter;
+                    if (c != "")
+                        pendingComment += (pendingComment != "" ? " " : "") + c;
+                }
+                else if (item.Key == "V")
+                {
+                    if (pendingComment != "")
+                    {
+                        sb.Append($"{{{pendingComment}}} ");
+                        pendingComment = "";
+                    }
+                    sb.Append(item.GetVariationPgn());
+                    sb.Append(' ');
+                }
+            }
+
+            if (pendingComment != "")
+                sb.Append($"{{{pendingComment}}}");
+
+            return sb.ToString().TrimEnd() + ")";
         }
 
         [GeneratedRegex("<[^>]*>")]
