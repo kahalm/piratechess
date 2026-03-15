@@ -223,7 +223,7 @@ namespace piratechess_lib
         private static string ReplaceCommentStuff(string comment)
         {
             comment = comment.Replace("@@StartBracket@@", "(").Replace("@@EndBracket@@", ")");
-            comment = comment.Replace("@@StartFEN@@", "").Replace("@@EndFEN@@", "");
+            comment = findFenTags().Replace(comment, "");
             comment = comment.Replace("@@StartBlockQuote@@", "").Replace("@@EndBlockQuote@@", "");
             comment = comment.Replace("@@LinkStart@@", "").Replace("@@LinkEnd@@", "");
             comment = comment.Replace("@@SANStart@@", "").Replace("@@SANEnd@@", "");
@@ -312,6 +312,9 @@ namespace piratechess_lib
 
         [GeneratedRegex("<[^>]*>")]
         private static partial Regex findHtmltags();
+
+        [GeneratedRegex(@"@@StartFEN@@(.+?)@@EndFEN@@")]
+        private static partial Regex findFenTags();
 
     }
 
