@@ -1,4 +1,5 @@
 ﻿using ChessDotNet;
+using ChessDotNet.Pieces;
 using RestSharp;
 using System.Text;
 using System.Text.Json;
@@ -175,54 +176,102 @@ namespace piratechess_lib
         {
             try
             {
-                var sb = new StringBuilder();
-                var fenParts = (Initial ?? "").Split(' ');
-                bool blackFirst = fenParts.Length > 1 && fenParts[1] == "b";
-
-                int lastMoveNum = 0;
-                bool firstOutput = false;
-                foreach (var m in sortedMoves.Values)
-                {
-                    if (m.Move > lastMoveNum)
-                    {
-                        sb.Append($"{m.Move}. ");
-                        if (!firstOutput && blackFirst)
-                            sb.Append("... ");
-                        lastMoveNum = m.Move;
-                    }
-                    firstOutput = true;
-                    sb.Append($"{m.San} ");
-                }
-                sb.Append("*");
-
-                var reader = new PgnReader<ChessGame>();
-                reader.ReadPgnFromString(sb.ToString());
-                var gameMoves = reader.Game.Moves;
+                ChessGame game = string.IsNullOrEmpty(Initial)
+                    ? new ChessGame()
+                    : new ChessGame(Initial);
 
                 var allMoves = sortedMoves.Values.ToList();
                 bool prevKey = false;
+
                 for (int i = 0; i < allMoves.Count; i++)
                 {
                     if (allMoves[i].IsKey && !prevKey)
                     {
-                        if (i >= gameMoves.Count) return null;
-                        var km = gameMoves[i];
-                        char ff = char.ToLower(km.OriginalPosition.File.ToString()[0]);
-                        int fr = km.OriginalPosition.Rank;
-                        char tf = char.ToLower(km.NewPosition.File.ToString()[0]);
-                        int tr = km.NewPosition.Rank;
+                        var move = SanToMove(game, allMoves[i].San);
+                        if (move == null) return null;
+                        char ff = char.ToLower(move.OriginalPosition.File.ToString()[0]);
+                        int fr = move.OriginalPosition.Rank;
+                        char tf = char.ToLower(move.NewPosition.File.ToString()[0]);
+                        int tr = move.NewPosition.Rank;
                         string uciStr = $"{ff}{fr}{tf}{tr}";
                         int eqIdx = allMoves[i].San.IndexOf('=');
                         if (eqIdx >= 0 && eqIdx + 1 < allMoves[i].San.Length)
                             uciStr += char.ToLower(allMoves[i].San[eqIdx + 1]);
                         return uciStr;
                     }
+
+                    // Advance the game position for non-key moves before the first key move
+                    var applyMove = SanToMove(game, allMoves[i].San);
+                    if (applyMove == null) return null;
+                    game.MakeMove(applyMove, false);
+
                     prevKey = allMoves[i].IsKey;
                 }
             }
             catch { }
             return null;
         }
+
+        private static Move? SanToMove(ChessGame game, string san)
+        {
+            string s = san.TrimEnd('+', '#', '!', '?');
+            int backRank = game.WhoseTurn == Player.White ? 1 : 8;
+
+            if (s is "O-O" or "0-0")
+                return new Move(new Position(ChessDotNet.File.E, backRank), new Position(ChessDotNet.File.G, backRank), game.WhoseTurn);
+            if (s is "O-O-O" or "0-0-0")
+                return new Move(new Position(ChessDotNet.File.E, backRank), new Position(ChessDotNet.File.C, backRank), game.WhoseTurn);
+
+            char? promo = null;
+            int eqIdx = s.IndexOf('=');
+            if (eqIdx >= 0) { promo = s[eqIdx + 1]; s = s[..eqIdx]; }
+
+            var destFile = (ChessDotNet.File)(char.ToLower(s[^2]) - 'a');
+            int destRank = s[^1] - '0';
+            var validMoves = game.GetValidMoves(game.WhoseTurn);
+
+            bool isPawn = !char.IsUpper(s[0]);
+            if (isPawn)
+            {
+                char? srcFile = s.Length >= 4 ? s[0] : (char?)null;
+                foreach (var vm in validMoves)
+                {
+                    if (vm.NewPosition.File != destFile || vm.NewPosition.Rank != destRank) continue;
+                    if (game.GetPieceAt(vm.OriginalPosition) is not Pawn) continue;
+                    if (srcFile.HasValue && char.ToLower(vm.OriginalPosition.File.ToString()[0]) != srcFile.Value) continue;
+                    return promo.HasValue
+                        ? new Move(vm.OriginalPosition, vm.NewPosition, game.WhoseTurn, promo.Value)
+                        : vm;
+                }
+                return null;
+            }
+
+            char pieceChar = s[0];
+            string mid = s.Length > 3 ? s[1..^2].Replace("x", "") : "";
+            char? disambigFile = mid.Length > 0 && char.IsLetter(mid[0]) ? mid[0] : (char?)null;
+            int? disambigRank = mid.Length > 0 && char.IsDigit(mid[^1]) ? mid[^1] - '0' : (int?)null;
+
+            foreach (var vm in validMoves)
+            {
+                if (vm.NewPosition.File != destFile || vm.NewPosition.Rank != destRank) continue;
+                var piece = game.GetPieceAt(vm.OriginalPosition);
+                if (piece == null || SanPieceChar(piece) != pieceChar) continue;
+                if (disambigFile.HasValue && char.ToLower(vm.OriginalPosition.File.ToString()[0]) != disambigFile.Value) continue;
+                if (disambigRank.HasValue && vm.OriginalPosition.Rank != disambigRank.Value) continue;
+                return vm;
+            }
+            return null;
+        }
+
+        private static char SanPieceChar(Piece piece) => piece switch
+        {
+            King => 'K',
+            Queen => 'Q',
+            Rook => 'R',
+            Bishop => 'B',
+            Knight => 'N',
+            _ => 'P'
+        };
     }
     public class JsonMove
     {
