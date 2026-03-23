@@ -11,11 +11,15 @@ namespace piratechess_lib
         private Action<string>? _chapterCounterEvent;
         private Action<string>? _lineCounterEvent;
         private Action<string>? _cumulativeLinesEvent;
+        private Action<string>? _retryEvent;
         private readonly StringBuilder _pgn = new();
         private string _bearer = string.Empty;
         private string _uid = string.Empty;
 
         public RestResponseCourse? restResponseCourse { get; set; }
+        public bool AllKeyMovesTraining { get; set; } = false;
+        public bool NoTrainingMove { get; set; } = false;
+        public bool AddMoveToEmptyChapters { get; set; } = false;
 
         public PirateChessLib()
         {
@@ -177,12 +181,27 @@ namespace piratechess_lib
             } else if (json == "")
             {
                 RestClient client = new($"https://www.chessable.com/api/v1/getGame?lng=en&uid={_uid}&oid={oid}");
-
                 RestRequest request = GenerateRequest(_bearer, Method.Get);
+                string round = $"{pgnHeader.Round:000}.{pgnHeader.Subround:000}";
 
-                RestResponse response = client.Execute(request);
+                for (int attempt = 0; attempt < 10; attempt++)
+                {
+                    RestResponse response = client.Execute(request);
+                    content = response.Content;
 
-                content = response.Content;
+                    if (!string.IsNullOrWhiteSpace(content) && content != "{}")
+                        break;
+
+                    if (attempt < 9)
+                    {
+                        _retryEvent?.Invoke($"[{round}] Retry {attempt + 1}/10 ...");
+                        System.Threading.Thread.Sleep(30000 + new Random().Next(0, 5000));
+                    }
+                    else
+                    {
+                        _retryEvent?.Invoke($"[{round}] FAILED after 10 attempts, skipping.");
+                    }
+                }
             }
             else
             {
@@ -199,9 +218,22 @@ namespace piratechess_lib
                     });
                 }
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
-                string? pgn = game?.Game?.GeneratePGN();
+                string? pgn = game?.Game?.GeneratePGN(AllKeyMovesTraining, NoTrainingMove);
 
-                pgnHeader.FEN = game?.Game.Initial ?? "";
+                pgnHeader.FEN = game?.Game?.Initial ?? "";
+
+                var nullMoveMatch = pgn != null
+                    ? System.Text.RegularExpressions.Regex.Match(pgn.Trim(), @"^1\.\s*--\s*(\{.*\})?\s*$", System.Text.RegularExpressions.RegexOptions.Singleline)
+                    : null;
+                bool isNullMoveOnly = nullMoveMatch?.Success == true;
+                if (AddMoveToEmptyChapters && (string.IsNullOrWhiteSpace(pgn) || isNullMoveOnly))
+                {
+                    string comment = isNullMoveOnly && nullMoveMatch!.Groups[1].Success
+                        ? " " + nullMoveMatch.Groups[1].Value
+                        : "";
+                    pgn = "1. e4" + comment;
+                    pgnHeader.FEN = "";
+                }
                 _cumLines++;
                 _cumulativeLinesEvent?.Invoke(_cumLines.ToString());
 
@@ -304,7 +336,7 @@ namespace piratechess_lib
             }
             else
             {
-                return "Antwort war leer - irgendwas ist falsch.";
+                return "Response was empty - something went wrong.";
             }
 
             return "";
@@ -389,6 +421,11 @@ namespace piratechess_lib
         public void SetCumulativeLinesEvent(Action<string> setCumulativeLines)
         {
             _cumulativeLinesEvent = setCumulativeLines;
+        }
+
+        public void SetRetryEvent(Action<string> retryEvent)
+        {
+            _retryEvent = retryEvent;
         }
 
         public string ExtractUid(string jwt)

@@ -55,6 +55,14 @@
             buttonLoadRestResponse = new Button();
             labelCourse = new Label();
             textBoxCourse = new TextBox();
+            textBoxLog = new TextBox();
+            labelElapsed = new Label();
+            groupBoxSettings = new GroupBox();
+            radioButtonFirstKeyMove = new RadioButton();
+            radioButtonAllKeyMoves = new RadioButton();
+            radioButtonNoTrainingMove = new RadioButton();
+            checkBoxAddMoveEmptyChapters = new CheckBox();
+            groupBoxSettings.SuspendLayout();
             SuspendLayout();
             // 
             // buttonParseAll
@@ -73,7 +81,7 @@
             textBoxPGN.Location = new Point(676, 56);
             textBoxPGN.Multiline = true;
             textBoxPGN.Name = "textBoxPGN";
-            textBoxPGN.Size = new Size(309, 268);
+            textBoxPGN.Size = new Size(309, 238);
             textBoxPGN.TabIndex = 1;
             //
             // labelCourse
@@ -304,12 +312,81 @@
             buttonLoadRestResponse.Text = "Load Raw Respone";
             buttonLoadRestResponse.UseVisualStyleBackColor = true;
             buttonLoadRestResponse.Click += buttonLoadRestResponse_Click;
-            // 
+            //
+            // labelElapsed
+            //
+            labelElapsed.AutoSize = true;
+            labelElapsed.Location = new Point(676, 298);
+            labelElapsed.Name = "labelElapsed";
+            labelElapsed.TabIndex = 41;
+            labelElapsed.Text = "Elapsed: --:--:--";
+            //
+            // textBoxLog
+            //
+            textBoxLog.Location = new Point(676, 562);
+            textBoxLog.Multiline = true;
+            textBoxLog.Name = "textBoxLog";
+            textBoxLog.ReadOnly = true;
+            textBoxLog.ScrollBars = ScrollBars.Vertical;
+            textBoxLog.Size = new Size(635, 80);
+            textBoxLog.TabIndex = 40;
+            //
+            // groupBoxSettings
+            //
+            groupBoxSettings.Location = new Point(1008, 28);
+            groupBoxSettings.Name = "groupBoxSettings";
+            groupBoxSettings.Size = new Size(305, 155);
+            groupBoxSettings.TabIndex = 38;
+            groupBoxSettings.TabStop = false;
+            groupBoxSettings.Text = "Settings";
+            groupBoxSettings.Controls.Add(radioButtonFirstKeyMove);
+            groupBoxSettings.Controls.Add(radioButtonAllKeyMoves);
+            groupBoxSettings.Controls.Add(radioButtonNoTrainingMove);
+            groupBoxSettings.Controls.Add(checkBoxAddMoveEmptyChapters);
+            //
+            // radioButtonFirstKeyMove
+            //
+            radioButtonFirstKeyMove.AutoSize = true;
+            radioButtonFirstKeyMove.Checked = true;
+            radioButtonFirstKeyMove.Location = new Point(12, 28);
+            radioButtonFirstKeyMove.Name = "radioButtonFirstKeyMove";
+            radioButtonFirstKeyMove.TabIndex = 0;
+            radioButtonFirstKeyMove.TabStop = true;
+            radioButtonFirstKeyMove.Text = "First key move as training move";
+            radioButtonFirstKeyMove.UseVisualStyleBackColor = true;
+            //
+            // radioButtonAllKeyMoves
+            //
+            radioButtonAllKeyMoves.AutoSize = true;
+            radioButtonAllKeyMoves.Location = new Point(12, 58);
+            radioButtonAllKeyMoves.Name = "radioButtonAllKeyMoves";
+            radioButtonAllKeyMoves.TabIndex = 1;
+            radioButtonAllKeyMoves.Text = "All key moves as training moves";
+            radioButtonAllKeyMoves.UseVisualStyleBackColor = true;
+            //
+            // radioButtonNoTrainingMove
+            //
+            radioButtonNoTrainingMove.AutoSize = true;
+            radioButtonNoTrainingMove.Location = new Point(12, 88);
+            radioButtonNoTrainingMove.Name = "radioButtonNoTrainingMove";
+            radioButtonNoTrainingMove.TabIndex = 2;
+            radioButtonNoTrainingMove.Text = "No training move";
+            radioButtonNoTrainingMove.UseVisualStyleBackColor = true;
+            //
+            // checkBoxAddMoveEmptyChapters
+            //
+            checkBoxAddMoveEmptyChapters.AutoSize = true;
+            checkBoxAddMoveEmptyChapters.Location = new Point(12, 122);
+            checkBoxAddMoveEmptyChapters.Name = "checkBoxAddMoveEmptyChapters";
+            checkBoxAddMoveEmptyChapters.TabIndex = 3;
+            checkBoxAddMoveEmptyChapters.Text = "Add move to empty chapters";
+            checkBoxAddMoveEmptyChapters.UseVisualStyleBackColor = true;
+            //
             // PirateChess
-            // 
+            //
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1293, 617);
+            ClientSize = new Size(1331, 655);
             Controls.Add(buttonLoadRestResponse);
             Controls.Add(buttonSaveRestResponse);
             Controls.Add(labelBearer);
@@ -335,11 +412,16 @@
             Controls.Add(labelDurchlauf);
             Controls.Add(textBoxDurchlauf);
             Controls.Add(textBoxPGN);
+            Controls.Add(textBoxLog);
+            Controls.Add(labelElapsed);
+            Controls.Add(groupBoxSettings);
             Controls.Add(buttonParseAll);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "PirateChess";
             Text = "Piratechess";
             Load += PirateChess_Load;
+            groupBoxSettings.ResumeLayout(false);
+            groupBoxSettings.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -372,5 +454,12 @@
         private Button buttonLoadRestResponse;
         private Label labelCourse;
         private TextBox textBoxCourse;
+        private TextBox textBoxLog;
+        private Label labelElapsed;
+        private GroupBox groupBoxSettings;
+        private RadioButton radioButtonFirstKeyMove;
+        private RadioButton radioButtonAllKeyMoves;
+        private RadioButton radioButtonNoTrainingMove;
+        private CheckBox checkBoxAddMoveEmptyChapters;
     }
 }

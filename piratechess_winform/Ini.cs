@@ -6,7 +6,7 @@ namespace piratechess_Winform
     class INIFileHandler
     {
         // Method to write string values to an INI file
-        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3, string key4, string value4, string key5, string value5, string key6 = "", string value6 = "")
+        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3, string key4, string value4, string key5, string value5, string key6 = "", string value6 = "", string key7 = "", string value7 = "", string key8 = "", string value8 = "")
         {
             StringBuilder iniContent = new();
 
@@ -21,13 +21,17 @@ namespace piratechess_Winform
             iniContent.AppendLine($"{key5}={value5}");
             if (!string.IsNullOrEmpty(key6))
                 iniContent.AppendLine($"{key6}={value6}");
+            if (!string.IsNullOrEmpty(key7))
+                iniContent.AppendLine($"{key7}={value7}");
+            if (!string.IsNullOrEmpty(key8))
+                iniContent.AppendLine($"{key8}={value8}");
 
             // Write to the file
             File.WriteAllText(filePath, iniContent.ToString());
         }
 
         // Method to read string values from an INI file
-        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3, string key4, string key5, string key6 = "")
+        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3, string key4, string key5, string key6 = "", string key7 = "", string key8 = "")
         {
             if (!File.Exists(filePath))
             {
@@ -37,7 +41,7 @@ namespace piratechess_Winform
 
             string[] lines = File.ReadAllLines(filePath);
             string currentSection = "";
-            string value1 = "", value2 = "", value3 = "", value4 = "", value5 = "", value6 = "";
+            string value1 = "", value2 = "", value3 = "", value4 = "", value5 = "", value6 = "", value7 = "", value8 = "";
 
             foreach (var line in lines)
             {
@@ -63,6 +67,8 @@ namespace piratechess_Winform
                     else if (k == key4) value4 = v;
                     else if (k == key5) value5 = v;
                     else if (!string.IsNullOrEmpty(key6) && k == key6) value6 = v;
+                    else if (!string.IsNullOrEmpty(key7) && k == key7) value7 = v;
+                    else if (!string.IsNullOrEmpty(key8) && k == key8) value8 = v;
                 }
             }
 
@@ -76,6 +82,10 @@ namespace piratechess_Winform
             };
             if (!string.IsNullOrEmpty(key6))
                 dict[key6] = value6;
+            if (!string.IsNullOrEmpty(key7))
+                dict[key7] = value7;
+            if (!string.IsNullOrEmpty(key8))
+                dict[key8] = value8;
 
             return dict;
         }

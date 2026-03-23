@@ -2,17 +2,18 @@ using piratechess_lib;
 using System.Text.Json;
 
 string exportBase = "";
+bool addMoveToEmptyChapters = false;
 string iniPath = Path.Combine(AppContext.BaseDirectory, "settings.ini");
 if (File.Exists(iniPath))
 {
     foreach (var line in File.ReadAllLines(iniPath))
     {
         var parts = line.Split('=', 2);
-        if (parts.Length == 2 && parts[0].Trim() == "exportFolder")
-        {
-            exportBase = parts[1].Trim();
-            break;
-        }
+        if (parts.Length != 2) continue;
+        string key = parts[0].Trim();
+        string val = parts[1].Trim();
+        if (key == "exportFolder") exportBase = val;
+        else if (key == "addMoveToEmptyChapters") addMoveToEmptyChapters = val == "1";
     }
 }
 if (string.IsNullOrEmpty(exportBase) || !Directory.Exists(exportBase))
@@ -46,33 +47,50 @@ foreach (string file in files)
         continue;
     }
 
-    var lib = new PirateChessLib();
-    lib.restResponseCourse = course;
-    lib.SetChapterCounterEvent(c => Console.Write($"\r  Chapter {c}   "));
-    lib.SetLineCounterEvent(l => Console.Write($"\r  Line {l}        "));
-    lib.SetCumulativeLinesEvent(t => Console.Write($"\r  Total lines: {t}   "));
+    string safeName = "";
 
-    var (pgn, coursename) = lib.GetCourse("", useLocalData: true);
-    Console.WriteLine();
-
-    if (string.IsNullOrEmpty(pgn))
+    foreach (var (label, allKeys, noTraining) in new (string, bool, bool)[] {
+        ("firstkey",   false, false),
+        ("allkeys",    true,  false),
+        ("notraining", false, true)
+    })
     {
-        Console.WriteLine("  WARNING: Empty PGN generated.");
-        continue;
-    }
+        Console.Write($"  [{label}] ");
 
-    string safeName = string.Concat(coursename.Split(Path.GetInvalidFileNameChars()));
-    if (string.IsNullOrWhiteSpace(safeName))
-        safeName = Path.GetFileNameWithoutExtension(file);
+        var lib = new PirateChessLib();
+        lib.restResponseCourse = course;
+        lib.AllKeyMovesTraining = allKeys;
+        lib.NoTrainingMove = noTraining;
+        lib.AddMoveToEmptyChapters = addMoveToEmptyChapters;
+        lib.SetChapterCounterEvent(c => Console.Write($"\r  [{label}] Chapter {c}   "));
+        lib.SetLineCounterEvent(l => Console.Write($"\r  [{label}] Line {l}        "));
+        lib.SetCumulativeLinesEvent(t => Console.Write($"\r  [{label}] Total lines: {t}   "));
 
-    string outPath = Path.Combine(pgnDir, safeName + ".pgn");
-    try
-    {
-        File.WriteAllText(outPath, pgn);
-        Console.WriteLine($"  Saved: {outPath}");
-    }
-    catch (IOException ex)
-    {
-        Console.WriteLine($"  ERROR: Could not write file (is it open in another program?): {ex.Message}");
+        var (pgn, coursename) = lib.GetCourse("", useLocalData: true);
+        Console.WriteLine();
+
+        if (string.IsNullOrEmpty(pgn))
+        {
+            Console.WriteLine($"  [{label}] WARNING: Empty PGN generated.");
+            continue;
+        }
+
+        if (string.IsNullOrEmpty(safeName))
+        {
+            safeName = string.Concat(coursename.Split(Path.GetInvalidFileNameChars()));
+            if (string.IsNullOrWhiteSpace(safeName))
+                safeName = Path.GetFileNameWithoutExtension(file);
+        }
+
+        string outPath = Path.Combine(pgnDir, $"{safeName}_{label}.pgn");
+        try
+        {
+            File.WriteAllText(outPath, pgn);
+            Console.WriteLine($"  [{label}] Saved: {outPath}");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"  [{label}] ERROR: Could not write file (is it open in another program?): {ex.Message}");
+        }
     }
 }

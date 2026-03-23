@@ -51,7 +51,7 @@ namespace piratechess_lib
         public bool Owned { get; set; }
         public List<JsonMove> Data { get; set; } = [];
         public string Initial { get; set; } = string.Empty;
-        public string GeneratePGN()
+        public string GeneratePGN(bool allKeyMovesTraining = false, bool noTrainingMove = false)
         {
             string pgn = "";
             SortedList<int, JsonMove> sortedMoves = [];
@@ -94,19 +94,51 @@ namespace piratechess_lib
                     }
                 }
             }
-            string? uci = GetFirstKeyMoveUci(sortedMoves);
-            bool prevKey = false;
-            foreach (JsonMove move in sortedMoves.Values)
+            if (!noTrainingMove && allKeyMovesTraining)
             {
-                if (move.IsKey && !prevKey)
+                var allUcis = GetAllTrainingUcis(sortedMoves);
+                bool prevKey = false;
+                bool pastFirstKey = false;
+                int moveIdx = 0;
+                var fenParts = (Initial ?? "").Split(' ');
+                bool currentIsWhite = fenParts.Length <= 1 || fenParts[1] != "b";
+                bool? firstKeyIsWhite = null;
+                foreach (JsonMove move in sortedMoves.Values)
                 {
-                    string trainingComment = $"[%tqu \"En\",\"find the move\",\"\",\"\",\"{uci ?? ""}\",\"\",10]";
-                    move.CommentBefore = move.CommentBefore == ""
-                        ? trainingComment
-                        : trainingComment + "\n" + move.CommentBefore;
-                    break;
+                    if (move.IsKey && !prevKey)
+                    {
+                        pastFirstKey = true;
+                        firstKeyIsWhite = currentIsWhite;
+                    }
+                    if (pastFirstKey && move.IsKey && firstKeyIsWhite == currentIsWhite)
+                    {
+                        string uci = moveIdx < allUcis.Count ? (allUcis[moveIdx] ?? "") : "";
+                        string trainingComment = $"[%tqu \"En\",\"find the move\",\"\",\"\",\"{uci}\",\"\",10]";
+                        move.CommentBefore = move.CommentBefore == ""
+                            ? trainingComment
+                            : trainingComment + "\n" + move.CommentBefore;
+                    }
+                    prevKey = move.IsKey;
+                    currentIsWhite = !currentIsWhite;
+                    moveIdx++;
                 }
-                prevKey = move.IsKey;
+            }
+            else if (!noTrainingMove)
+            {
+                string? uci = GetFirstKeyMoveUci(sortedMoves);
+                bool prevKey = false;
+                foreach (JsonMove move in sortedMoves.Values)
+                {
+                    if (move.IsKey && !prevKey)
+                    {
+                        string trainingComment = $"[%tqu \"En\",\"find the move\",\"\",\"\",\"{uci ?? ""}\",\"\",10]";
+                        move.CommentBefore = move.CommentBefore == ""
+                            ? trainingComment
+                            : trainingComment + "\n" + move.CommentBefore;
+                        break;
+                    }
+                    prevKey = move.IsKey;
+                }
             }
 
             int lastMove = 0;
@@ -170,6 +202,39 @@ namespace piratechess_lib
                 lastMove = move.Move;
             }
             return pgn;
+        }
+
+        private List<string?> GetAllTrainingUcis(SortedList<int, JsonMove> sortedMoves)
+        {
+            var result = new List<string?>(sortedMoves.Count);
+            try
+            {
+                ChessGame game = string.IsNullOrEmpty(Initial)
+                    ? new ChessGame()
+                    : new ChessGame(Initial);
+
+                foreach (var m in sortedMoves.Values)
+                {
+                    var move = SanToMove(game, m.San);
+                    if (move == null) { result.Add(null); break; }
+
+                    char ff = char.ToLower(move.OriginalPosition.File.ToString()[0]);
+                    int fr = move.OriginalPosition.Rank;
+                    char tf = char.ToLower(move.NewPosition.File.ToString()[0]);
+                    int tr = move.NewPosition.Rank;
+                    string uciStr = $"{ff}{fr}{tf}{tr}";
+                    int eqIdx = m.San.IndexOf('=');
+                    if (eqIdx >= 0 && eqIdx + 1 < m.San.Length)
+                        uciStr += char.ToLower(m.San[eqIdx + 1]);
+                    result.Add(uciStr);
+
+                    game.MakeMove(move, false);
+                }
+            }
+            catch { }
+            while (result.Count < sortedMoves.Count)
+                result.Add(null);
+            return result;
         }
 
         private string? GetFirstKeyMoveUci(SortedList<int, JsonMove> sortedMoves)

@@ -9,13 +9,15 @@ namespace piratechess_Winform
         private string _coursename = string.Empty;
         private string _exportFolder = string.Empty;
         private readonly PirateChessLib _pirate = new();
+        private readonly System.Windows.Forms.Timer _elapsedTimer = new() { Interval = 1000 };
+        private DateTime _startTime;
         public PirateChess()
         {
             InitializeComponent();
 
 
             // Read values from INI
-            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3, Options.key4, Options.key5, Options.key6);
+            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3, Options.key4, Options.key5, Options.key6, Options.key7, Options.key8);
             /* if (!settings.TryGetValue(Options.key1, out string? value1))
              {
                  value1 = "";
@@ -40,6 +42,14 @@ namespace piratechess_Winform
             {
                 value6 = "";
             }
+            if (!settings.TryGetValue(Options.key7, out string? value7))
+            {
+                value7 = "";
+            }
+            if (!settings.TryGetValue(Options.key8, out string? value8))
+            {
+                value8 = "";
+            }
 
             if (value2 == "1")
             {
@@ -53,12 +63,22 @@ namespace piratechess_Winform
             textBoxEmail.Text = value4;
             textBoxPwd.Text = value5;
             _exportFolder = value6;
+            radioButtonAllKeyMoves.Checked = value7 == "1";
+            radioButtonNoTrainingMove.Checked = value7 == "2";
+            radioButtonFirstKeyMove.Checked = value7 != "1" && value7 != "2";
+            checkBoxAddMoveEmptyChapters.Checked = value8 == "1";
 
             setEditVisibility();
 
             _pirate.SetChapterCounterEvent(SetChapterCounter);
             _pirate.SetLineCounterEvent(SetLineCounter);
             _pirate.SetCumulativeLinesEvent(SetCumulativeLinesCounter);
+            _pirate.SetRetryEvent(AppendLog);
+            _elapsedTimer.Tick += (s, e) =>
+            {
+                var elapsed = DateTime.Now - _startTime;
+                labelElapsed.Text = $"Elapsed: {(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+            };
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
@@ -66,7 +86,8 @@ namespace piratechess_Winform
             // Write values to INI
             INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, "",
                 Options.key2, radioButtonBearer.Checked ? "1" : "", Options.key3, textBoxBearer.Text, Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text,
-                Options.key6, _exportFolder);
+                Options.key6, _exportFolder, Options.key7, radioButtonAllKeyMoves.Checked ? "1" : radioButtonNoTrainingMove.Checked ? "2" : "",
+                Options.key8, checkBoxAddMoveEmptyChapters.Checked ? "1" : "");
 
             base.OnFormClosed(e);
         }
@@ -75,21 +96,24 @@ namespace piratechess_Winform
         {
             int count = checkedListBoxChapters.CheckedItems.Count;
             var confirm = MessageBox.Show(
-                $"Wollen Sie {count} Kurs{(count == 1 ? "" : "e")} exportieren?",
-                "Export bestätigen",
+                $"Export {count} course{(count == 1 ? "" : "s")}?",
+                "Confirm export",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
             if (confirm != DialogResult.Yes)
                 return;
 
             using var folderDialog = new FolderBrowserDialog();
-            folderDialog.Description = "Export-Basisordner auswählen";
+            folderDialog.Description = "Select export folder";
             if (!string.IsNullOrEmpty(_exportFolder) && Directory.Exists(_exportFolder))
                 folderDialog.InitialDirectory = _exportFolder;
             if (folderDialog.ShowDialog() != DialogResult.OK)
                 return;
 
             _exportFolder = folderDialog.SelectedPath;
+            _startTime = DateTime.Now;
+            labelElapsed.Text = "Elapsed: 00:00:00";
+            _elapsedTimer.Start();
             LoadLines(autoExport: true, exportFolder: _exportFolder);
         }
 
@@ -104,8 +128,14 @@ namespace piratechess_Winform
             textBoxCurLines.Text = "0";
             textBoxCumulativeLines.Text = "0";
 
+            bool allKeyMoves = radioButtonAllKeyMoves.Checked;
+            bool noTrainingMove = radioButtonNoTrainingMove.Checked;
+            bool addMoveToEmptyChapters = checkBoxAddMoveEmptyChapters.Checked;
             new Thread(() =>
             {
+                _pirate.AllKeyMovesTraining = allKeyMoves;
+                _pirate.NoTrainingMove = noTrainingMove;
+                _pirate.AddMoveToEmptyChapters = addMoveToEmptyChapters;
                 var allPgn = new StringBuilder();
                 if (useLocalData)
                 {
@@ -151,6 +181,7 @@ namespace piratechess_Winform
                 {
                     textBoxPGN.Text = allPgn.ToString();
                     SetButtonsEnabledState(true);
+                    _elapsedTimer.Stop();
                 }));
 
                 MessageBox.Show("Finished.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.None,
@@ -185,6 +216,14 @@ namespace piratechess_Winform
             Invoke(new Action(() =>
             {
                 textBoxCumulativeLines.Text = cumLines;
+            }));
+        }
+
+        public void AppendLog(string message)
+        {
+            Invoke(new Action(() =>
+            {
+                textBoxLog.AppendText(message + Environment.NewLine);
             }));
         }
 
