@@ -118,6 +118,7 @@ namespace piratechess_maui
             _pirate.SetChapterCounterEvent(ChapterCounter);
             _pirate.SetLineCounterEvent(LineCounter);
 
+            EditorPgn.Text = "";
             EditorLog.Text = "";
             LabelElapsed.Text = "Elapsed: 00:00:00";
             _startTime = DateTime.Now;
@@ -158,7 +159,7 @@ namespace piratechess_maui
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                LabelChapterCounter.Text = obj;
+                LabelLineCounter.Text = obj;
             });
         }
 
@@ -172,7 +173,7 @@ namespace piratechess_maui
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                LabelLineCounter.Text = obj;
+                LabelChapterCounter.Text = obj;
             });
         }
     }
