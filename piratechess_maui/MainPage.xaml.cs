@@ -5,10 +5,21 @@ namespace piratechess_maui
     public partial class MainPage : ContentPage
     {
         private readonly PirateChessLib _pirate = new();
+        private IDispatcherTimer? _elapsedTimer;
+        private DateTime _startTime;
+
         public MainPage()
         {
             InitializeComponent();
             _pirate.SetRetryEvent(AppendLog);
+
+            _elapsedTimer = Dispatcher.CreateTimer();
+            _elapsedTimer.Interval = TimeSpan.FromSeconds(1);
+            _elapsedTimer.Tick += (s, e) =>
+            {
+                var elapsed = DateTime.Now - _startTime;
+                LabelElapsed.Text = $"Elapsed: {(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}";
+            };
         }
 
         private void AppendLog(string message)
@@ -107,6 +118,9 @@ namespace piratechess_maui
             _pirate.SetLineCounterEvent(LineCounter);
 
             EditorLog.Text = "";
+            LabelElapsed.Text = "Elapsed: 00:00:00";
+            _startTime = DateTime.Now;
+            _elapsedTimer?.Start();
             bool allKeyMoves = RadioAllKeyMoves.IsChecked;
             bool noTrainingMove = RadioNoTrainingMove.IsChecked;
             bool addMoveToEmpty = CheckBoxAddMoveEmptyChapters.IsChecked;
@@ -121,6 +135,7 @@ namespace piratechess_maui
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     EditorPgn.Text = pgn;
+                    _elapsedTimer?.Stop();
                 });
             }).Start();
         }

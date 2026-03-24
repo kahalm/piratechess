@@ -25,6 +25,7 @@
                    IsPassword="True"/>
             <Label x:Name="LabelChapterCounter"/>
             <Label x:Name="LabelLineCounter"/>
+            <Label x:Name="LabelElapsed" Text="Elapsed: 00:00:00"/>
             <Button
                 x:Name="ButtonLogin"
                 Text="Login" 
