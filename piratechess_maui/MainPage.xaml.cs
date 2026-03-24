@@ -71,11 +71,13 @@ namespace piratechess_maui
 
             bool allKeyMoves = RadioAllKeyMoves.IsChecked;
             bool noTrainingMove = RadioNoTrainingMove.IsChecked;
+            bool addMoveToEmpty = CheckBoxAddMoveEmptyChapters.IsChecked;
 
             new Thread(() =>
             {
                 _pirate.AllKeyMovesTraining = allKeyMoves;
                 _pirate.NoTrainingMove = noTrainingMove;
+                _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
                 (var pgn, _) = _pirate.GetCourse(selected.Key, maxLines);
 
                 MainThread.BeginInvokeOnMainThread(() =>

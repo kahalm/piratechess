@@ -41,6 +41,11 @@
             <Picker x:Name="myPicker"
                 ItemDisplayBinding="{Binding Value}" />
 
+            <HorizontalStackLayout Spacing="10">
+                <CheckBox x:Name="CheckBoxAddMoveEmptyChapters"/>
+                <Label Text="Add move to empty chapters" VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+
             <Label Text="Training move options:" FontAttributes="Bold"/>
             <VerticalStackLayout Spacing="5">
                 <RadioButton x:Name="RadioFirstKeyMove"
