@@ -21,16 +21,23 @@ namespace piratechess_maui
 
         private async void Login()
         {
-           var result = _pirate.Login(EntryBearer.Text, EntryUid.Text);
+            string result;
+            if (SwitchUseBearer.IsToggled)
+                result = _pirate.LoginWithBearer(EntryBearer.Text);
+            else
+                result = _pirate.Login(EntryEmail.Text, EntryPassword.Text);
 
             if (result != "")
-            {
                 await Shell.Current.DisplayAlert("Error", result, "OK");
-            }
             else
-            {
                 await Shell.Current.DisplayAlert("Login ok", "Login ok", "OK");
-            }
+        }
+
+        private void OnSwitchUseBearerToggled(object sender, ToggledEventArgs e)
+        {
+            EntryBearer.IsVisible = e.Value;
+            EntryEmail.IsVisible = !e.Value;
+            EntryPassword.IsVisible = !e.Value;
         }
         private void OnButtonLoadChapterClicked(object sender, EventArgs e)
         {

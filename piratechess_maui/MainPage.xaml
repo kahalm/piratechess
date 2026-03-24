@@ -7,13 +7,22 @@
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25">
-            <Entry x:Name="EntryBearer"
-                   Placeholder="enter email"
-                   />
 
-            <Entry x:Name="EntryUid"
-                   Placeholder="enter password"
-                   />
+            <HorizontalStackLayout Spacing="10">
+                <Label Text="Use Bearer Token" VerticalOptions="Center"/>
+                <Switch x:Name="SwitchUseBearer" Toggled="OnSwitchUseBearerToggled"/>
+            </HorizontalStackLayout>
+
+            <Entry x:Name="EntryBearer"
+                   Placeholder="Enter JWT bearer token"
+                   IsVisible="False"/>
+
+            <Entry x:Name="EntryEmail"
+                   Placeholder="Enter email"/>
+
+            <Entry x:Name="EntryPassword"
+                   Placeholder="Enter password"
+                   IsPassword="True"/>
             <Label x:Name="LabelChapterCounter"/>
             <Label x:Name="LabelLineCounter"/>
             <Button
