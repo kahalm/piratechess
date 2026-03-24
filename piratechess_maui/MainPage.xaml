@@ -41,9 +41,23 @@
             <Picker x:Name="myPicker"
                 ItemDisplayBinding="{Binding Value}" />
 
+            <Label Text="Training move options:" FontAttributes="Bold"/>
+            <VerticalStackLayout Spacing="5">
+                <RadioButton x:Name="RadioFirstKeyMove"
+                             Content="First key move as training move"
+                             GroupName="TrainingMode"
+                             IsChecked="True"/>
+                <RadioButton x:Name="RadioAllKeyMoves"
+                             Content="All key moves as training moves"
+                             GroupName="TrainingMode"/>
+                <RadioButton x:Name="RadioNoTrainingMove"
+                             Content="No training move"
+                             GroupName="TrainingMode"/>
+            </VerticalStackLayout>
+
             <Button
                 x:Name="FirstTenLines"
-                Text="First 10 lines" 
+                Text="First 10 lines"
                 SemanticProperties.Hint="Generates the first 10 lines of a given course"
                 HorizontalOptions="Fill" 
                 Clicked="OnButtonFirstTenLinesClicked" />

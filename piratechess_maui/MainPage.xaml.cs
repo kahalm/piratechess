@@ -69,8 +69,13 @@ namespace piratechess_maui
             _pirate.SetChapterCounterEvent(ChapterCounter);
             _pirate.SetLineCounterEvent(LineCounter);
 
+            bool allKeyMoves = RadioAllKeyMoves.IsChecked;
+            bool noTrainingMove = RadioNoTrainingMove.IsChecked;
+
             new Thread(() =>
             {
+                _pirate.AllKeyMovesTraining = allKeyMoves;
+                _pirate.NoTrainingMove = noTrainingMove;
                 (var pgn, _) = _pirate.GetCourse(selected.Key, maxLines);
 
                 MainThread.BeginInvokeOnMainThread(() =>
