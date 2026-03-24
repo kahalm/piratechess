@@ -131,9 +131,10 @@ namespace piratechess_maui
                 _pirate.AllKeyMovesTraining = allKeyMoves;
                 _pirate.NoTrainingMove = noTrainingMove;
                 _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
-                (var pgn, _) = _pirate.GetCourse(selected.Key, maxLines);
+                (var pgn, var coursename) = _pirate.GetCourse(selected.Key, maxLines);
                 _lastPgn = pgn ?? "";
                 int lineCount = _lastPgn.Count(c => c == '\n');
+                AppendLog($"{coursename}: {_pirate.ErrorCount} error(s)");
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
