@@ -9,11 +9,14 @@ Steps to use the program:
 * fill in username & Password (Or Bearertoken)
 * Click Login
 * Click fill chapter
-* select the course you want to export
+* select the course you want to export (or courses)
 * Click Generate
 * Save the pgn or copy it to your prefered Program
 
 * you can now save (in the winform-version) the raw Response from the server and load it again - this way you have to hit the server only once. if anything is not working just send me an email or open a issue and attach the rrf (.restResponse) file - that way I can debug the Problem without needing the course itself.
+  This is also helpfull if I build a new version as reading the local restResponsenses is MUCH faster (bigger courses take ~1 hour to load due to server limitations as I don't want to pull too fast and even with my delay I am regularly hitting some Server limits).
+
+* If you select multiple courses it automaticly saves rawresponse and pgn
 
 No Video export and none planned.
 
