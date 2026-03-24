@@ -8,6 +8,15 @@ namespace piratechess_maui
         public MainPage()
         {
             InitializeComponent();
+            _pirate.SetRetryEvent(AppendLog);
+        }
+
+        private void AppendLog(string message)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                EditorLog.Text += message + Environment.NewLine;
+            });
         }
 
         protected override void OnAppearing()
@@ -97,6 +106,7 @@ namespace piratechess_maui
             _pirate.SetChapterCounterEvent(ChapterCounter);
             _pirate.SetLineCounterEvent(LineCounter);
 
+            EditorLog.Text = "";
             bool allKeyMoves = RadioAllKeyMoves.IsChecked;
             bool noTrainingMove = RadioNoTrainingMove.IsChecked;
             bool addMoveToEmpty = CheckBoxAddMoveEmptyChapters.IsChecked;
