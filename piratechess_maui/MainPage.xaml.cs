@@ -138,11 +138,13 @@ namespace piratechess_maui
                     _lastPgn = pgn ?? "";
                     string pgnSnapshot = _lastPgn;
                     AppendLog($"{coursename}: {_pirate.ErrorCount} error(s)");
+                    AppendLog("Alles geladen – PGN wird angezeigt ...");
 
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         EditorPgn.Text = pgnSnapshot;
                         _elapsedTimer?.Stop();
+                        AppendLog("Fertig.");
                     });
                 }
                 catch (Exception ex)
