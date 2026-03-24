@@ -133,12 +133,11 @@ namespace piratechess_maui
                 _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
                 (var pgn, var coursename) = _pirate.GetCourse(selected.Key, maxLines);
                 _lastPgn = pgn ?? "";
-                int lineCount = _lastPgn.Count(c => c == '\n');
                 AppendLog($"{coursename}: {_pirate.ErrorCount} error(s)");
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    EditorPgn.Text = $"[PGN generated: {lineCount} lines — use Share to export]";
+                    EditorPgn.Text = _lastPgn;
                     _elapsedTimer?.Stop();
                 });
             }).Start();

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="piratechess_maui.MainPage">
@@ -23,20 +23,18 @@
             <Entry x:Name="EntryPassword"
                    Placeholder="Enter password"
                    IsPassword="True"/>
-            <Label x:Name="LabelChapterCounter"/>
-            <Label x:Name="LabelLineCounter"/>
-            <Label x:Name="LabelElapsed" Text="Elapsed: 00:00:00"/>
+
             <Button
                 x:Name="ButtonLogin"
-                Text="Login" 
+                Text="Login"
                 SemanticProperties.Hint="Login"
-                HorizontalOptions="Fill" 
+                HorizontalOptions="Fill"
                 Clicked="OnButtonLoginClicked" />
             <Button
                 x:Name="ButtonLoadChapter"
-                Text="Load Chapters" 
+                Text="Load Chapters"
                 SemanticProperties.Hint="Loads all chapters"
-                HorizontalOptions="Fill" 
+                HorizontalOptions="Fill"
                 Clicked="OnButtonLoadChapterClicked" />
 
             <Picker x:Name="myPicker"
@@ -65,24 +63,34 @@
                 x:Name="FirstTenLines"
                 Text="First 10 lines"
                 SemanticProperties.Hint="Generates the first 10 lines of a given course"
-                HorizontalOptions="Fill" 
+                HorizontalOptions="Fill"
                 Clicked="OnButtonFirstTenLinesClicked" />
             <Button
                 x:Name="GenerateCourse"
-                Text="Generate whole course" 
+                Text="Generate whole course"
                 SemanticProperties.Hint="Generates the a given course"
-                HorizontalOptions="Fill" 
+                HorizontalOptions="Fill"
                 Clicked="OnButtonGenerateCourseClicked" />
 
-            <Editor x:Name="EditorPgn"
-                Placeholder="Here will be the PGN of your Course"
-                HeightRequest="400" />
+            <HorizontalStackLayout Spacing="15">
+                <Label Text="Chapter:" VerticalOptions="Center"/>
+                <Label x:Name="LabelChapterCounter" VerticalOptions="Center"/>
+                <Label Text="Lines:" VerticalOptions="Center"/>
+                <Label x:Name="LabelLineCounter" VerticalOptions="Center"/>
+                <Label x:Name="LabelElapsed" Text="Elapsed: 00:00:00" VerticalOptions="Center"/>
+            </HorizontalStackLayout>
 
             <Label Text="Log:" FontAttributes="Bold"/>
             <Editor x:Name="EditorLog"
                 IsReadOnly="True"
                 HeightRequest="120"
                 BackgroundColor="#F0F0F0"/>
+
+            <Label Text="PGN:" FontAttributes="Bold"/>
+            <Editor x:Name="EditorPgn"
+                Placeholder="Here will be the PGN of your Course"
+                HeightRequest="400" />
+
         </VerticalStackLayout>
     </ScrollView>
 
