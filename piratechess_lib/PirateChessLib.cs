@@ -8,6 +8,7 @@ namespace piratechess_lib
     public class PirateChessLib
     {
         private int _cumLines = 0;
+        private int _errorCount = 0;
         private Action<string>? _chapterCounterEvent;
         private Action<string>? _lineCounterEvent;
         private Action<string>? _cumulativeLinesEvent;
@@ -17,6 +18,7 @@ namespace piratechess_lib
         private string _uid = string.Empty;
 
         public RestResponseCourse? restResponseCourse { get; set; }
+        public int ErrorCount => _errorCount;
         public bool AllKeyMovesTraining { get; set; } = false;
         public bool NoTrainingMove { get; set; } = false;
         public bool AddMoveToEmptyChapters { get; set; } = false;
@@ -36,6 +38,7 @@ namespace piratechess_lib
         public (string, string) GetCourse(string bid, int lines = 10000, bool useLocalData = false)
         {
             _cumLines = 0;
+            _errorCount = 0;
             string? content = null;
             string coursename = string.Empty;
 
@@ -194,11 +197,13 @@ namespace piratechess_lib
 
                     if (attempt < 9)
                     {
+                        _errorCount++;
                         _retryEvent?.Invoke($"[{round}] Retry {attempt + 1}/10 ...");
                         System.Threading.Thread.Sleep(30000 + new Random().Next(0, 5000));
                     }
                     else
                     {
+                        _errorCount++;
                         _retryEvent?.Invoke($"[{round}] FAILED after 10 attempts, skipping.");
                     }
                 }

@@ -142,6 +142,7 @@ namespace piratechess_Winform
                 {
                     (string? pgn, _coursename) = _pirate.GetCourse("", maxLines, useLocalData: true);
                     allPgn.Append(pgn);
+                    AppendLog($"{_coursename}: {_pirate.ErrorCount} error(s)");
                 }
                 else
                 {
@@ -163,6 +164,7 @@ namespace piratechess_Winform
 
                         (string? pgn, _coursename) = _pirate.GetCourse(bid, maxLines);
                         allPgn.Append(pgn);
+                        AppendLog($"{_coursename}: {_pirate.ErrorCount} error(s)");
 
                         if (autoExport && !string.IsNullOrEmpty(_coursename))
                         {
