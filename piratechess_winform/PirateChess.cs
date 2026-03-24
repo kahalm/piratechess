@@ -8,6 +8,7 @@ namespace piratechess_Winform
     {
         private string _coursename = string.Empty;
         private string _exportFolder = string.Empty;
+        private string _lastPgn = string.Empty;
         private readonly PirateChessLib _pirate = new();
         private readonly System.Windows.Forms.Timer _elapsedTimer = new() { Interval = 1000 };
         private DateTime _startTime;
@@ -177,9 +178,11 @@ namespace piratechess_Winform
                     }
                 }
 
+                _lastPgn = allPgn.ToString();
+                int lineCount = _lastPgn.Count(c => c == '\n');
                 Invoke(new Action(() =>
                 {
-                    textBoxPGN.Text = allPgn.ToString();
+                    textBoxPGN.Text = $"[PGN generated: {lineCount} lines — use Save PGN to export]";
                     SetButtonsEnabledState(true);
                     _elapsedTimer.Stop();
                 }));
@@ -257,8 +260,8 @@ namespace piratechess_Winform
 
                 try
                 {
-                    // Write the content of the TextBox to the selected file
-                    File.WriteAllText(filePath, textBoxPGN.Text);
+                    // Write the last generated PGN to the selected file
+                    File.WriteAllText(filePath, _lastPgn);
                     MessageBox.Show("File saved successfully!");
                 }
                 catch (Exception ex)
