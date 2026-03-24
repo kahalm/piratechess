@@ -129,18 +129,27 @@ namespace piratechess_maui
 
             new Thread(() =>
             {
-                _pirate.AllKeyMovesTraining = allKeyMoves;
-                _pirate.NoTrainingMove = noTrainingMove;
-                _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
-                (var pgn, var coursename) = _pirate.GetCourse(selected.Key, maxLines);
-                _lastPgn = pgn ?? "";
-                AppendLog($"{coursename}: {_pirate.ErrorCount} error(s)");
-
-                MainThread.BeginInvokeOnMainThread(() =>
+                try
                 {
-                    EditorPgn.Text = _lastPgn;
-                    _elapsedTimer?.Stop();
-                });
+                    _pirate.AllKeyMovesTraining = allKeyMoves;
+                    _pirate.NoTrainingMove = noTrainingMove;
+                    _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
+                    (var pgn, var coursename) = _pirate.GetCourse(selected.Key, maxLines);
+                    _lastPgn = pgn ?? "";
+                    string pgnSnapshot = _lastPgn;
+                    AppendLog($"{coursename}: {_pirate.ErrorCount} error(s)");
+
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        EditorPgn.Text = pgnSnapshot;
+                        _elapsedTimer?.Stop();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    AppendLog($"ERROR: {ex.Message}");
+                    MainThread.BeginInvokeOnMainThread(() => _elapsedTimer?.Stop());
+                }
             }).Start();
         }
 

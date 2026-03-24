@@ -84,12 +84,15 @@
             <Editor x:Name="EditorLog"
                 IsReadOnly="True"
                 HeightRequest="120"
-                BackgroundColor="#F0F0F0"/>
+                BackgroundColor="#1E1E1E"
+                TextColor="#D4D4D4"/>
 
             <Label Text="PGN:" FontAttributes="Bold"/>
             <Editor x:Name="EditorPgn"
                 Placeholder="Here will be the PGN of your Course"
-                HeightRequest="400" />
+                HeightRequest="400"
+                BackgroundColor="#1E1E1E"
+                TextColor="#D4D4D4"/>
 
         </VerticalStackLayout>
     </ScrollView>
