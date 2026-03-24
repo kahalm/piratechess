@@ -7,6 +7,7 @@ namespace piratechess_maui
         private readonly PirateChessLib _pirate = new();
         private IDispatcherTimer? _elapsedTimer;
         private DateTime _startTime;
+        private string _lastPgn = string.Empty;
 
         public MainPage()
         {
@@ -131,10 +132,12 @@ namespace piratechess_maui
                 _pirate.NoTrainingMove = noTrainingMove;
                 _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
                 (var pgn, _) = _pirate.GetCourse(selected.Key, maxLines);
+                _lastPgn = pgn ?? "";
+                int lineCount = _lastPgn.Count(c => c == '\n');
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    EditorPgn.Text = pgn;
+                    EditorPgn.Text = $"[PGN generated: {lineCount} lines — use Share to export]";
                     _elapsedTimer?.Stop();
                 });
             }).Start();
