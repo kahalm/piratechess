@@ -10,6 +10,34 @@ namespace piratechess_maui
             InitializeComponent();
         }
 
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            SwitchUseBearer.IsToggled = Preferences.Get("useBearer", false);
+            EntryBearer.Text = Preferences.Get("bearer", "");
+            EntryEmail.Text = Preferences.Get("email", "");
+            EntryPassword.Text = Preferences.Get("password", "");
+            string trainingMode = Preferences.Get("trainingMode", "firstkey");
+            RadioAllKeyMoves.IsChecked = trainingMode == "allkeys";
+            RadioNoTrainingMove.IsChecked = trainingMode == "notraining";
+            RadioFirstKeyMove.IsChecked = trainingMode == "firstkey";
+            CheckBoxAddMoveEmptyChapters.IsChecked = Preferences.Get("addMoveToEmpty", false);
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            Preferences.Set("useBearer", SwitchUseBearer.IsToggled);
+            Preferences.Set("bearer", EntryBearer.Text ?? "");
+            Preferences.Set("email", EntryEmail.Text ?? "");
+            Preferences.Set("password", EntryPassword.Text ?? "");
+            string trainingMode = RadioAllKeyMoves.IsChecked ? "allkeys"
+                : RadioNoTrainingMove.IsChecked ? "notraining"
+                : "firstkey";
+            Preferences.Set("trainingMode", trainingMode);
+            Preferences.Set("addMoveToEmpty", CheckBoxAddMoveEmptyChapters.IsChecked);
+        }
+
         private void OnButtonFirstTenLinesClicked(object sender, EventArgs e)
         {
             GenerateLinesAsync(10);
