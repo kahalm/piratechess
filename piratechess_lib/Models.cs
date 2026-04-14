@@ -154,6 +154,7 @@ namespace piratechess_lib
             }
 
             int lastMove = 0;
+            string pendingVariations = "";
             foreach (JsonMove move in sortedMoves.Values)
             {
                 if (move.CommentBefore != "")
@@ -166,6 +167,12 @@ namespace piratechess_lib
                     pgn += $"{move.Move}. ";
                 }
                 pgn += move.San + " ";
+
+                if (pendingVariations != "")
+                {
+                    pgn += pendingVariations + " ";
+                    pendingVariations = "";
+                }
 
                 var arrowList = move.Draws.Where(x => x.Object == "arrow").ToList();
                 var circleList = move.Draws.Where(x => x.Object == "circle").ToList();
@@ -208,10 +215,14 @@ namespace piratechess_lib
 
                 if (move.CommentVariations != "")
                 {
-                    pgn += move.CommentVariations + " ";
+                    pendingVariations = move.CommentVariations;
                 }
 
                 lastMove = move.Move;
+            }
+            if (pendingVariations != "")
+            {
+                pgn += pendingVariations + " ";
             }
             return pgn;
         }
