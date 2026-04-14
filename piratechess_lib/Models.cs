@@ -51,6 +51,8 @@ namespace piratechess_lib
         public bool Owned { get; set; }
         public List<JsonMove> Data { get; set; } = [];
         public string Initial { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public int IsInfo { get; set; }
         public string GeneratePGN(bool allKeyMovesTraining = false, bool noTrainingMove = false)
         {
             string pgn = "";
@@ -94,6 +96,7 @@ namespace piratechess_lib
                     }
                 }
             }
+            if (IsInfo == 1) noTrainingMove = true;
             if (!noTrainingMove && allKeyMovesTraining)
             {
                 var allUcis = GetAllTrainingUcis(sortedMoves);
@@ -102,15 +105,17 @@ namespace piratechess_lib
                 int moveIdx = 0;
                 var fenParts = (Initial ?? "").Split(' ');
                 bool currentIsWhite = fenParts.Length <= 1 || fenParts[1] != "b";
-                bool? firstKeyIsWhite = null;
+                bool? solverIsWhite = !string.IsNullOrEmpty(Color)
+                    ? Color.Equals("white", StringComparison.OrdinalIgnoreCase)
+                    : null;
                 foreach (JsonMove move in sortedMoves.Values)
                 {
                     if (move.IsKey && !prevKey)
                     {
                         pastFirstKey = true;
-                        firstKeyIsWhite = currentIsWhite;
+                        solverIsWhite ??= currentIsWhite;
                     }
-                    if (pastFirstKey && move.IsKey && firstKeyIsWhite == currentIsWhite)
+                    if (pastFirstKey && move.IsKey && solverIsWhite == currentIsWhite)
                     {
                         string uci = moveIdx < allUcis.Count ? (allUcis[moveIdx] ?? "") : "";
                         string trainingComment = $"[%tqu \"En\",\"find the move\",\"\",\"\",\"{uci}\",\"\",10]";
@@ -125,11 +130,18 @@ namespace piratechess_lib
             }
             else if (!noTrainingMove)
             {
-                string? uci = GetFirstKeyMoveUci(sortedMoves);
-                bool prevKey = false;
+                bool? solverIsWhite = !string.IsNullOrEmpty(Color)
+                    ? Color.Equals("white", StringComparison.OrdinalIgnoreCase)
+                    : null;
+                string? uci = GetFirstKeyMoveUci(sortedMoves, solverIsWhite);
+                var fenParts = (Initial ?? "").Split(' ');
+                bool currentIsWhite = fenParts.Length <= 1 || fenParts[1] != "b";
+                bool foundKeyBlock = false;
                 foreach (JsonMove move in sortedMoves.Values)
                 {
-                    if (move.IsKey && !prevKey)
+                    if (move.IsKey && !foundKeyBlock)
+                        foundKeyBlock = true;
+                    if (foundKeyBlock && move.IsKey && (solverIsWhite == null || solverIsWhite.Value == currentIsWhite))
                     {
                         string trainingComment = $"[%tqu \"En\",\"find the move\",\"\",\"\",\"{uci ?? ""}\",\"\",10]";
                         move.CommentBefore = move.CommentBefore == ""
@@ -137,7 +149,7 @@ namespace piratechess_lib
                             : trainingComment + "\n" + move.CommentBefore;
                         break;
                     }
-                    prevKey = move.IsKey;
+                    currentIsWhite = !currentIsWhite;
                 }
             }
 
@@ -237,7 +249,7 @@ namespace piratechess_lib
             return result;
         }
 
-        private string? GetFirstKeyMoveUci(SortedList<int, JsonMove> sortedMoves)
+        private string? GetFirstKeyMoveUci(SortedList<int, JsonMove> sortedMoves, bool? solverIsWhite)
         {
             try
             {
@@ -246,31 +258,36 @@ namespace piratechess_lib
                     : new ChessGame(Initial);
 
                 var allMoves = sortedMoves.Values.ToList();
-                bool prevKey = false;
+                bool foundKeyBlock = false;
 
                 for (int i = 0; i < allMoves.Count; i++)
                 {
-                    if (allMoves[i].IsKey && !prevKey)
+                    if (allMoves[i].IsKey && !foundKeyBlock)
+                        foundKeyBlock = true;
+
+                    if (foundKeyBlock && allMoves[i].IsKey)
                     {
-                        var move = SanToMove(game, allMoves[i].San);
-                        if (move == null) return null;
-                        char ff = char.ToLower(move.OriginalPosition.File.ToString()[0]);
-                        int fr = move.OriginalPosition.Rank;
-                        char tf = char.ToLower(move.NewPosition.File.ToString()[0]);
-                        int tr = move.NewPosition.Rank;
-                        string uciStr = $"{ff}{fr}{tf}{tr}";
-                        int eqIdx = allMoves[i].San.IndexOf('=');
-                        if (eqIdx >= 0 && eqIdx + 1 < allMoves[i].San.Length)
-                            uciStr += char.ToLower(allMoves[i].San[eqIdx + 1]);
-                        return uciStr;
+                        bool isWhiteTurn = game.WhoseTurn == Player.White;
+                        if (solverIsWhite == null || solverIsWhite.Value == isWhiteTurn)
+                        {
+                            var move = SanToMove(game, allMoves[i].San);
+                            if (move == null) return null;
+                            char ff = char.ToLower(move.OriginalPosition.File.ToString()[0]);
+                            int fr = move.OriginalPosition.Rank;
+                            char tf = char.ToLower(move.NewPosition.File.ToString()[0]);
+                            int tr = move.NewPosition.Rank;
+                            string uciStr = $"{ff}{fr}{tf}{tr}";
+                            int eqIdx = allMoves[i].San.IndexOf('=');
+                            if (eqIdx >= 0 && eqIdx + 1 < allMoves[i].San.Length)
+                                uciStr += char.ToLower(allMoves[i].San[eqIdx + 1]);
+                            return uciStr;
+                        }
                     }
 
-                    // Advance the game position for non-key moves before the first key move
+                    // Advance the game position for all moves before the target
                     var applyMove = SanToMove(game, allMoves[i].San);
                     if (applyMove == null) return null;
                     game.MakeMove(applyMove, false);
-
-                    prevKey = allMoves[i].IsKey;
                 }
             }
             catch { }
