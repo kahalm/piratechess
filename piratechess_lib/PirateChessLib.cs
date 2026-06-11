@@ -451,17 +451,31 @@ namespace piratechess_lib
             return "";
         }
 
+        private const string BearerHelpUrl = "https://github.com/kahalm/piratechess#get-bearer-token";
+
         public string LoginWithBearer(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                return "Bearer-Token ist leer.";
+                return $"Bearer-Token ist leer. Anleitung: {BearerHelpUrl}";
+            }
+
+            text = text.Trim();
+            if (text.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                text = text.Substring(7).Trim();
+            }
+
+            var parts = text.Split('.');
+            if (parts.Length != 3 || parts.Any(string.IsNullOrWhiteSpace))
+            {
+                return $"Ungültiges Token-Format: erwartet sind 3 Base64-Blöcke getrennt durch Punkte (header.payload.signature), gefunden {parts.Length}. Anleitung: {BearerHelpUrl}";
             }
 
             var exp = JwtHelper.GetExpiration(text);
             if (exp.HasValue && exp.Value <= DateTimeOffset.UtcNow)
             {
-                return $"Bearer-Token ist abgelaufen (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Bitte neuen Token aus dem Browser holen.";
+                return $"Bearer-Token ist abgelaufen (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Bitte neuen Token holen. Anleitung: {BearerHelpUrl}";
             }
 
             try
@@ -470,7 +484,7 @@ namespace piratechess_lib
             }
             catch (Exception ex)
             {
-                return $"Token konnte nicht gelesen werden: {ex.Message}";
+                return $"Token konnte nicht gelesen werden: {ex.Message}. Anleitung: {BearerHelpUrl}";
             }
             _bearer = text;
 

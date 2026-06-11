@@ -28,7 +28,11 @@ Planned:
 * Klickable Variants
 * Export arrows and colours - Done
 
-If you need the Bearertoken use Developertools (Tab Network), Refresh the Dashboard. Look for getUserSettings and copy the value for Authorization (starts with Bearer). Use right cick and copy value, paste to any editor, copy everything after Bearer, this is your bearer token. 
+## Get Bearer Token
+
+If you need the Bearertoken use Developertools (Tab Network), Refresh the Dashboard. Look for getUserSettings and copy the value for Authorization (starts with Bearer). Use right cick and copy value, paste to any editor, copy everything after Bearer, this is your bearer token.
+
+A valid token has the JWT format `header.payload.signature` (three Base64-URL blocks separated by dots) and is valid for 7 days.
 
 Gui very barebone for now - especially the dropdownbox is barely visible in Maui when empty.
 ![image](https://github.com/user-attachments/assets/0f7a25a7-ad2a-4143-84b1-d5ba3c9f789c)
