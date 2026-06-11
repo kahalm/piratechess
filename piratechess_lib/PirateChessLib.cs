@@ -323,7 +323,11 @@ namespace piratechess_lib
                 {
                     if (!response.IsSuccessful)
                     {
-                        return content;
+                        if ((int)response.StatusCode == 403)
+                        {
+                            return "Chessable blockt den Login via API (Cloudflare 403). Bitte JWT-Bearer aus dem Browser holen und 'Use Bearer Token' verwenden.";
+                        }
+                        return $"Login fehlgeschlagen ({(int)response.StatusCode}): {content}";
                     }
                     //--ActivityStatusCode: Uauthorized
                     ResponseLogin? responseLogin = JsonSerializer.Deserialize<ResponseLogin>(content, options: Options.GetOptions());
@@ -449,8 +453,26 @@ namespace piratechess_lib
 
         public string LoginWithBearer(string text)
         {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return "Bearer-Token ist leer.";
+            }
+
+            var exp = JwtHelper.GetExpiration(text);
+            if (exp.HasValue && exp.Value <= DateTimeOffset.UtcNow)
+            {
+                return $"Bearer-Token ist abgelaufen (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Bitte neuen Token aus dem Browser holen.";
+            }
+
+            try
+            {
+                _uid = JwtHelper.ExtractUidFromToken(text).ToString();
+            }
+            catch (Exception ex)
+            {
+                return $"Token konnte nicht gelesen werden: {ex.Message}";
+            }
             _bearer = text;
-            _uid = JwtHelper.ExtractUidFromToken(text).ToString();
 
             return "";
         }

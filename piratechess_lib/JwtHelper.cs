@@ -29,6 +29,31 @@ public static class JwtHelper
         throw new InvalidOperationException("UID konnte im Token nicht gefunden werden.");
     }
 
+    public static DateTimeOffset? GetExpiration(string jwtToken)
+    {
+        if (string.IsNullOrWhiteSpace(jwtToken)) return null;
+        var parts = jwtToken.Split('.');
+        if (parts.Length < 2) return null;
+
+        try
+        {
+            string json = DecodeBase64Url(parts[1]);
+            using JsonDocument doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("exp", out JsonElement expEl) && expEl.TryGetInt64(out long exp))
+            {
+                return DateTimeOffset.FromUnixTimeSeconds(exp);
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    public static bool IsExpired(string jwtToken)
+    {
+        var exp = GetExpiration(jwtToken);
+        return exp.HasValue && exp.Value <= DateTimeOffset.UtcNow;
+    }
+
     private static string DecodeBase64Url(string base64Url)
     {
         string padded = base64Url.Replace('-', '+').Replace('_', '/');
