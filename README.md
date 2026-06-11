@@ -34,6 +34,15 @@ If you need the Bearertoken use Developertools (Tab Network), Refresh the Dashbo
 
 A valid token has the JWT format `header.payload.signature` (three Base64-URL blocks separated by dots) and is valid for 7 days.
 
+### Easier: the RepCheck browser extension
+
+Instead of digging through the DevTools network tab, you can grab the token with the **RepCheck** browser extension / userscript ([github.com/kahalm/repcheck](https://github.com/kahalm/repcheck)). RepCheck is primarily an opening-repertoire deviation checker for chess.com and lichess (it pairs with the [RookHub](https://rookhub.oberschmid.homes) chess platform), but since v1.8.0 it can also read your Chessable bearer token for use here:
+
+* **Extension**: while logged in on chessable.com, open the RepCheck toolbar popup → "Chessable-Token" → **"Token kopieren"**, then paste the token into PirateChess.
+* **Userscript**: on chessable.com open the Tampermonkey menu → **"🔑 Chessable-Token kopieren"**.
+
+The token is read locally from `localStorage['chessable.web.production.JWT']` and only copied to your clipboard — it is never sent anywhere.
+
 Gui very barebone for now - especially the dropdownbox is barely visible in Maui when empty.
 ![image](https://github.com/user-attachments/assets/0f7a25a7-ad2a-4143-84b1-d5ba3c9f789c)
 
