@@ -369,3 +369,13 @@ rawresponses/*
 # PGN exports (local only)
 pgn/*
 !pgn/.gitkeep
+
+# Local config (enthält Bearer/Passwort)
+settings.ini
+
+# Lokale Ad-hoc-Scripts & Experimente (enthalten teils API-Tokens im Klartext)
+lichess_*.mjs
+test_*.mjs
+read_pgn*.ps1
+run_batch.ps1
+runs.json
