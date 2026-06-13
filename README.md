@@ -1,3 +1,15 @@
+> # ⛔ This project is discontinued
+>
+> **PirateChess (the standalone Winform/MAUI/CLI app) is no longer maintained.**
+>
+> 👉 **Use [RookHub](https://rookhub.oberschmid.homes) instead** — the chess training
+> platform that now carries this functionality forward (Chessable course export and much more).
+>
+> This repository is archived and kept read-only for reference only. No further updates,
+> releases or bugfixes will be made here.
+
+---
+
 Use at your own risk!
 Don't know if it is against any TOS, but be warned if you get banned its not my fault. Use only for personal backups.
 
