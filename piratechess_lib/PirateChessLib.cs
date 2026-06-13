@@ -87,7 +87,9 @@ namespace piratechess_lib
                     chapterCounter++;
 
                     _chapterCounterEvent?.Invoke($"{chapterCounter} / {course.Course.Data.Count}");
-                    coursename = GetChapter(Options.GetOptions(), lines, chapterCounter, bid, item.Id.ToString(), useLocalData);
+                    var chapterName = GetChapter(Options.GetOptions(), lines, chapterCounter, bid, item.Id.ToString(), useLocalData);
+                    if (!string.IsNullOrEmpty(chapterName))
+                        coursename = chapterName; // übersprungene/leere Kapitel sollen den Kursnamen nicht überschreiben
                     Random rand = new();
                     if (!useLocalData)
                     {
@@ -135,6 +137,13 @@ namespace piratechess_lib
                     };
 
                     restResponseCourse?.ChapterList.Add(restResponseChapter);
+                }
+                // Leeres/ungültiges Kapitel (z.B. fehlgeschlagener Fetch im Cache) überspringen
+                // statt JsonSerializer crashen zu lassen.
+                if (string.IsNullOrWhiteSpace(content) || content == "{}")
+                {
+                    _errorCount++;
+                    return coursename;
                 }
                 ResponseChapter responseChapter = JsonSerializer.Deserialize<ResponseChapter>(content, options: caseInvariant) ?? new ResponseChapter();
                 coursename = responseChapter.List.Name;
@@ -221,6 +230,14 @@ namespace piratechess_lib
                     {
                         LineJsonContent = content
                     });
+                }
+                // Leere/ungültige Linie (z.B. nach 10 erfolglosen Fetch-Retries als "" gecacht)
+                // überspringen statt JsonSerializer crashen zu lassen — sonst killt eine einzige
+                // Linie den ganzen Kurs-PGN-Export.
+                if (string.IsNullOrWhiteSpace(content) || content == "{}")
+                {
+                    _errorCount++;
+                    return;
                 }
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
                 string? pgn = game?.Game?.GeneratePGN(AllKeyMovesTraining, NoTrainingMove);
