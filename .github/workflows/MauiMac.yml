@@ -38,8 +38,9 @@ jobs:
         run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst -p:EnableCodeSigning=false
 
       - name: Publish MAUI Projekt für macOS (Nicht-Self-Contained)
-        # No PublishTrimmed here: trimming requires a self-contained publish (NETSDK1102).
-        run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst --output ./publish/maui/macos --self-contained false -r maccatalyst-x64 /p:PublishSingleFile=false /p:PublishReadyToRun=false /p:DebugType=none
+        # PublishTrimmed must be switched off explicitly: MacCatalyst turns it on by
+        # default for Release, and trimming a non-self-contained app fails with NETSDK1102.
+        run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst --output ./publish/maui/macos --self-contained false -r maccatalyst-x64 /p:PublishTrimmed=false /p:PublishSingleFile=false /p:PublishReadyToRun=false /p:DebugType=none
 
       - name: Release-Asset erstellen für macOS
         uses: softprops/action-gh-release@v1
