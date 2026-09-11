@@ -37,8 +37,9 @@ jobs:
       - name: Build MAUI Projekt für macOS Catalyst
         run: dotnet build ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst -p:EnableCodeSigning=false
 
-      - name: Publish MAUI Projekt für macOS (Trimmed, Nicht-Self-Contained)
-        run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst --output ./publish/maui/macos --self-contained false -r maccatalyst-x64 /p:PublishTrimmed=true /p:PublishSingleFile=false /p:PublishReadyToRun=false /p:DebugType=none
+      - name: Publish MAUI Projekt für macOS (Nicht-Self-Contained)
+        # No PublishTrimmed here: trimming requires a self-contained publish (NETSDK1102).
+        run: dotnet publish ./piratechess_maui/piratechess_maui.csproj -f net9.0-maccatalyst --output ./publish/maui/macos --self-contained false -r maccatalyst-x64 /p:PublishSingleFile=false /p:PublishReadyToRun=false /p:DebugType=none
 
       - name: Release-Asset erstellen für macOS
         uses: softprops/action-gh-release@v1
