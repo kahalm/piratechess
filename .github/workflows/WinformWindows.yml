@@ -25,14 +25,30 @@ jobs:
     - name: Build WinForms project
       run: dotnet build ./piratechess_winform/piratechess_winform.csproj --configuration Release
 
-    - name: Publish WinForms project 64-bit (Single File)
-      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x64 --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none 
+    # Two variants per architecture:
+    #   self-contained      -> ~110 MB, runs without any .NET installation
+    #   framework-dependent -> ~3 MB, needs the .NET 9 Desktop Runtime on the machine
+    - name: Publish WinForms project 64-bit self-contained (Single File)
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x64 --self-contained true -r win-x64 /p:PublishSingleFile=true /p:DebugType=none
 
-    - name: Publish WinForms projects 32-bit (Single File)
-      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x86 --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none 
-      
-    - name: Umbenennen der 32-bit Version
-      run: Rename-Item -Path ./publish/win-x86/piratechess_winform.exe -NewName piratechess_winform-win-x86.exe
+    - name: Publish WinForms project 64-bit framework-dependent (Single File)
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x64-fx --self-contained false -r win-x64 /p:PublishSingleFile=true /p:DebugType=none
+
+    - name: Publish WinForms project 32-bit self-contained (Single File)
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x86 --self-contained true -r win-x86 /p:PublishSingleFile=true /p:DebugType=none
+
+    - name: Publish WinForms project 32-bit framework-dependent (Single File)
+      run: dotnet publish piratechess_winform/piratechess_winform.csproj --configuration Release --output ./publish/win-x86-fx --self-contained false -r win-x86 /p:PublishSingleFile=true /p:DebugType=none
+
+    - name: Umbenennen der Varianten
+      run: |
+        Rename-Item -Path ./publish/win-x64/piratechess_winform.exe -NewName piratechess_winform.exe
+        Rename-Item -Path ./publish/win-x64-fx/piratechess_winform.exe -NewName piratechess_winform-needs-dotnet9.exe
+        Rename-Item -Path ./publish/win-x86/piratechess_winform.exe -NewName piratechess_winform-win-x86.exe
+        Rename-Item -Path ./publish/win-x86-fx/piratechess_winform.exe -NewName piratechess_winform-win-x86-needs-dotnet9.exe
+
+    - name: Groessen der Artefakte anzeigen
+      run: Get-ChildItem -Recurse ./publish -Filter *.exe | Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}}
 
     - name: Release-Asset erstellen
       uses: softprops/action-gh-release@v1

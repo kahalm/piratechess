@@ -19,6 +19,25 @@ As I want to get real ownership of bought stuff (and import the courses into che
 
 Login works with a JWT bearer token only. The email/password login was removed because Chessable blocks the API login behind Cloudflare.
 
+## Which file do I download?
+
+Every release ships each Windows build twice. Same program, different packaging:
+
+| File | Size | Requirement |
+|------|------|-------------|
+| `piratechess_winform.exe` | ~110 MB | none, the .NET runtime is inside |
+| `piratechess_winform-win-x86.exe` | ~102 MB | none, 32-bit machines |
+| `piratechess_winform-needs-dotnet9.exe` | ~3 MB | [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/9.0) installed |
+| `piratechess_winform-win-x86-needs-dotnet9.exe` | ~3 MB | same, 32-bit machines |
+| `piratechess_maui-win-x64.exe` | ~240 MB | none |
+| `piratechess_maui-win-x64-needs-dotnet9.exe` | ~117 MB | .NET 9 Desktop Runtime installed |
+
+If in doubt take `piratechess_winform.exe`. It is the big one, but it just runs. The
+`-needs-dotnet9` files are for machines that already have the runtime and where the
+download size matters. Releases 0.30 and older only had the self-contained variant;
+0.31 accidentally only had the framework-dependent one, which is why its EXE was 3 MB
+and refused to start without the runtime.
+
 Steps to use the program:
 * paste your bearer token (see below)
 * Click Login

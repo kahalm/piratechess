@@ -141,13 +141,19 @@ Workflows trigger on `release: published` and `workflow_dispatch`. Key constrain
 
 | Target | Runner | Notes |
 |--------|--------|-------|
-| WinForms win-x64/win-x86 | `windows-latest` | Single-file EXE |
+| WinForms win-x64/win-x86 | `windows-latest` | Single-file EXE, published **twice per architecture**: self-contained (`piratechess_winform.exe`, ~110 MB) and framework-dependent (`piratechess_winform-needs-dotnet9.exe`, ~3 MB) |
 | MAUI Android (.apk) | `windows-latest` | Version from git tag |
 | MAUI iOS | `macos-26` | `iossimulator-x64 -c Debug` only (no cert) |
 | MAUI macOS | `macos-26` | `-p:EnableCodeSigning=false` required |
-| MAUI Windows | `windows-latest` | No `-r win-x64` flag (not needed) |
+| MAUI Windows | `windows-latest` | No `-r win-x64` flag (not needed); also published twice, self-contained and `-needs-dotnet9` |
 
-`macos-26` runner is required for Apple's new versioning (Xcode 26 compatibility).
+`macos-26` runner is required for Apple's new versioning (Xcode 26 compatibility). Both Apple
+workflows select `/Applications/Xcode_26.5.app` explicitly: the runner defaults to Xcode 26.6,
+but the installed .NET for iOS/MacCatalyst workload requires exactly 26.5. The macOS publish must
+be self-contained — MacCatalyst forces `PublishTrimmed=true` and trimming requires it.
+
+Do not drop `--self-contained` from the Windows publish steps: the flag decides whether the EXE
+carries the .NET runtime, and users download by that distinction.
 
 ## NuGet Dependencies
 
