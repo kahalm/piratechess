@@ -23,21 +23,9 @@ namespace piratechess_Winform
              {
                  value1 = "";
              }*/
-            if (!settings.TryGetValue(Options.key2, out string? value2))
-            {
-                value2 = "";
-            }
             if (!settings.TryGetValue(Options.key3, out string? value3))
             {
                 value3 = "";
-            }
-            if (!settings.TryGetValue(Options.key4, out string? value4))
-            {
-                value4 = "";
-            }
-            if (!settings.TryGetValue(Options.key5, out string? value5))
-            {
-                value5 = "";
             }
             if (!settings.TryGetValue(Options.key6, out string? value6))
             {
@@ -60,17 +48,7 @@ namespace piratechess_Winform
                 value10 = "";
             }
 
-            if (value2 == "1")
-            {
-                radioButtonBearer.Checked = true;
-            }
-            else
-            {
-                radioButtonLogin.Checked = true;
-            }
             textBoxBearer.Text = value3;
-            textBoxEmail.Text = value4;
-            textBoxPwd.Text = value5;
             _exportFolder = value6;
             radioButtonAllKeyMoves.Checked = value7 == "1";
             radioButtonNoTrainingMove.Checked = value7 == "2";
@@ -80,8 +58,6 @@ namespace piratechess_Winform
             numericExtraDelayMax.Value = ClampToDelayRange(value10);
             if (numericExtraDelayMax.Value < numericExtraDelayMin.Value)
                 numericExtraDelayMax.Value = numericExtraDelayMin.Value;
-
-            setEditVisibility();
 
             _pirate.SetChapterCounterEvent(SetChapterCounter);
             _pirate.SetLineCounterEvent(SetLineCounter);
@@ -100,10 +76,7 @@ namespace piratechess_Winform
             INIFileHandler.WriteToINI(Options.filePath, Options.section, new Dictionary<string, string>
             {
                 [Options.key1] = "",
-                [Options.key2] = radioButtonBearer.Checked ? "1" : "",
                 [Options.key3] = textBoxBearer.Text,
-                [Options.key4] = textBoxEmail.Text,
-                [Options.key5] = textBoxPwd.Text,
                 [Options.key6] = _exportFolder,
                 [Options.key7] = radioButtonAllKeyMoves.Checked ? "1" : radioButtonNoTrainingMove.Checked ? "2" : "",
                 [Options.key8] = checkBoxAddMoveEmptyChapters.Checked ? "1" : "",
@@ -228,7 +201,7 @@ namespace piratechess_Winform
         {
             Invoke(new Action(() =>
             {
-                textBoxDurchlauf.Text = chapterCounter;
+                textBoxChapter.Text = chapterCounter;
 
             }));
         }
@@ -257,8 +230,8 @@ namespace piratechess_Winform
             }));
         }
 
-        // Liest einen ms-Wert aus der INI und hält ihn im erlaubten Bereich des Spinners.
-        // Negatives, leeres oder unlesbares wird zu 0.
+        // Reads a ms value from the INI and keeps it inside the spinner's allowed range.
+        // Negative, empty or unreadable becomes 0.
         private decimal ClampToDelayRange(string value)
         {
             if (!int.TryParse(value, out int ms) || ms < 0)
@@ -321,16 +294,7 @@ namespace piratechess_Winform
 
         private void ButtonLogin_Click(object sender, EventArgs e)
         {
-            string result;
-
-            if (radioButtonBearer.Checked)
-            {
-                result = _pirate.LoginWithBearer(textBoxBearer.Text);
-            }
-            else
-            {
-                result = _pirate.Login(textBoxEmail.Text, textBoxPwd.Text);
-            }
+            string result = _pirate.LoginWithBearer(textBoxBearer.Text);
 
             if (result != "")
             {
@@ -345,33 +309,6 @@ namespace piratechess_Winform
         private void PirateChess_Load(object sender, EventArgs e)
         {
 
-        }
-
-        private void setEditVisibility()
-        {
-            if (radioButtonBearer.Checked)
-            {
-                labelBearer.Visible = true;
-                textBoxBearer.Visible = true;
-                labelEmail.Visible = false;
-                textBoxEmail.Visible = false;
-                labelPwd.Visible = false;
-                textBoxPwd.Visible = false;
-            }
-            else
-            {
-                labelBearer.Visible = false;
-                textBoxBearer.Visible = false;
-                labelEmail.Visible = true;
-                textBoxEmail.Visible = true;
-                labelPwd.Visible = true;
-                textBoxPwd.Visible = true;
-            }
-
-        }
-        private void RadioButtonBearer_CheckedChanged(object sender, EventArgs e)
-        {
-            setEditVisibility();
         }
 
         private void ButtonLoadChapters_Click(object sender, EventArgs e)

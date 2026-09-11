@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using RestSharp;
 
@@ -27,9 +26,8 @@ namespace piratechess_lib
         private int _extraDelayMaxMs = 0;
 
         /// <summary>
-        /// Untere Grenze der zusätzlichen Wartezeit in ms, die auf den eingebauten
-        /// Delay von 500-1500 ms zwischen zwei Chessable-Calls draufkommt.
-        /// Negative Werte werden auf 0 gesetzt.
+        /// Lower bound of the extra wait in ms that is added on top of the built-in
+        /// 500-1500 ms delay between two Chessable calls. Negative values become 0.
         /// </summary>
         public int ExtraDelayMinMs
         {
@@ -38,9 +36,8 @@ namespace piratechess_lib
         }
 
         /// <summary>
-        /// Obere Grenze der zusätzlichen Wartezeit in ms. Negative Werte werden auf 0
-        /// gesetzt; liegt der Wert unter <see cref="ExtraDelayMinMs"/>, werden die beiden
-        /// Grenzen beim Warten getauscht.
+        /// Upper bound of the extra wait in ms. Negative values become 0; if the value is
+        /// below <see cref="ExtraDelayMinMs"/>, both bounds are swapped when waiting.
         /// </summary>
         public int ExtraDelayMaxMs
         {
@@ -114,7 +111,7 @@ namespace piratechess_lib
                     _chapterCounterEvent?.Invoke($"{chapterCounter} / {course.Course.Data.Count}");
                     var chapterName = GetChapter(Options.GetOptions(), lines, chapterCounter, bid, item.Id.ToString(), useLocalData);
                     if (!string.IsNullOrEmpty(chapterName))
-                        coursename = chapterName; // übersprungene/leere Kapitel sollen den Kursnamen nicht überschreiben
+                        coursename = chapterName; // skipped/empty chapters must not overwrite the course name
                     if (!useLocalData)
                     {
                         SleepBetweenCalls();
@@ -129,8 +126,8 @@ namespace piratechess_lib
         }
 
         /// <summary>
-        /// Wartet zwischen zwei Chessable-Calls: eingebauter Grundschutz von 500-1500 ms
-        /// plus der in der GUI gesetzte Zusatz-Delay aus <see cref="ExtraDelayMinMs"/> und
+        /// Waits between two Chessable calls: the built-in 500-1500 ms baseline plus the
+        /// extra delay set in the GUI via <see cref="ExtraDelayMinMs"/> and
         /// <see cref="ExtraDelayMaxMs"/>.
         /// </summary>
         private void SleepBetweenCalls()
@@ -180,8 +177,8 @@ namespace piratechess_lib
 
                     restResponseCourse?.ChapterList.Add(restResponseChapter);
                 }
-                // Leeres/ungültiges Kapitel (z.B. fehlgeschlagener Fetch im Cache) überspringen
-                // statt JsonSerializer crashen zu lassen.
+                // Skip an empty/invalid chapter (e.g. a failed fetch stored in the cache)
+                // instead of letting JsonSerializer crash.
                 if (string.IsNullOrWhiteSpace(content) || content == "{}")
                 {
                     _errorCount++;
@@ -272,9 +269,9 @@ namespace piratechess_lib
                         LineJsonContent = content
                     });
                 }
-                // Leere/ungültige Linie (z.B. nach 10 erfolglosen Fetch-Retries als "" gecacht)
-                // überspringen statt JsonSerializer crashen zu lassen — sonst killt eine einzige
-                // Linie den ganzen Kurs-PGN-Export.
+                // Skip an empty/invalid line (e.g. cached as "" after 10 failed fetch retries)
+                // instead of letting JsonSerializer crash — otherwise a single line kills the
+                // whole course PGN export.
                 if (string.IsNullOrWhiteSpace(content) || content == "{}")
                 {
                     _errorCount++;
@@ -339,75 +336,6 @@ namespace piratechess_lib
             return chapters;
         }
 
-        public string Login(string emailInput, string pwdInput)
-        {
-            if (string.IsNullOrEmpty(emailInput))
-            {
-                return "please fill out email.";
-            }
-            if (string.IsNullOrEmpty(pwdInput))
-            {
-                return "please fill out password.";
-            }
-            var hash = ComputeSha512Hash(pwdInput);
-
-            RestClient client = new($"https://www.chessable.com/api/v1/authenticate");
-
-            var requestBody = new
-            {
-                method = "email",
-                credentials = new
-                {
-                    email = emailInput,
-                    password = hash
-                },
-                providerData = (object?)null,
-                mode = "login",
-                checkoutData = (object?)null,
-                preferredLanguage = "en",
-                newsletterChecked = false
-            };
-            string json = JsonSerializer.Serialize(requestBody);
-
-
-            RestRequest request = GenerateRequestLogin(json);
-
-            RestResponse response = client.Execute(request);
-            var content = response.Content ?? "";
-
-            if (content != null)
-            {
-                try
-                {
-                    if (!response.IsSuccessful)
-                    {
-                        if ((int)response.StatusCode == 403)
-                        {
-                            return "Chessable blockt den Login via API (Cloudflare 403). Bitte JWT-Bearer aus dem Browser holen und 'Use Bearer Token' verwenden.";
-                        }
-                        return $"Login fehlgeschlagen ({(int)response.StatusCode}): {content}";
-                    }
-                    //--ActivityStatusCode: Uauthorized
-                    ResponseLogin? responseLogin = JsonSerializer.Deserialize<ResponseLogin>(content, options: Options.GetOptions());
-
-                    if (responseLogin != null)
-                    {
-                        _bearer = responseLogin.Jwt;
-                        _uid = responseLogin.Uid.ToString();
-                    }
-                }
-                catch (Exception e)
-                {
-                    return (e.Message);
-                }
-            }
-            else
-            {
-                return "Response was empty - something went wrong.";
-            }
-
-            return "";
-        }
         private static RestRequest GenerateRequest(string bearer, Method method)
         {
             RestRequest request = new("", method);
@@ -433,47 +361,6 @@ namespace piratechess_lib
             return request;
         }
 
-        private static RestRequest GenerateRequestLogin(string json)
-        {
-            var request = new RestRequest("", Method.Post);
-            request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0");
-            request.AddHeader("accept", "application/json, text/plain, */*");
-            request.AddHeader("accept-language", "en");
-            request.AddHeader("accept-encoding", "gzip, deflate, br, zstd");
-            request.AddHeader("referer", "https://www.chessable.com/login/");
-            request.AddHeader("content-type", "application/json;charset=utf-8");
-            request.AddHeader("platform", "Web");
-            request.AddHeader("x-os-name", "Firefox");
-            request.AddHeader("x-os-version", "137");
-            request.AddHeader("x-device-model", "Windows");
-            request.AddHeader("origin", "https://www.chessable.com");
-            request.AddHeader("alt-used", "www.chessable.com");
-            request.AddHeader("connection", "keep-alive");
-            request.AddHeader("sec-fetch-dest", "empty");
-            request.AddHeader("sec-fetch-mode", "cors");
-            request.AddHeader("sec-fetch-site", "same-origin");
-            request.AddHeader("dnt", "1");
-            request.AddHeader("sec-gpc", "1");
-            request.AddHeader("priority", "u=0");
-
-            request.AddJsonBody(json);
-
-            return request;
-        }
-
-        static string ComputeSha512Hash(string input)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(input);
-            byte[] hashBytes = SHA512.HashData(bytes);
-            StringBuilder builder = new();
-
-            foreach (byte b in hashBytes)
-            {
-                builder.Append(b.ToString("x2")); // hex format
-            }
-
-            return builder.ToString();
-        }
 
         public void SetChapterCounterEvent(Action<string> setChapterCounter)
         {
@@ -512,18 +399,18 @@ namespace piratechess_lib
         private const string RepCheckUrl = "https://github.com/kahalm/repcheck";
         private const string RookHubUrl = "https://rookhub.oberschmid.homes";
 
-        // Hinweis, der an jede Bearer-Fehlermeldung angehängt wird: Token holt man am
-        // bequemsten mit der RepCheck-Extension, gespeichert wird über RookHub.
+        // Hint appended to every bearer error message: the token is easiest to grab with
+        // the RepCheck extension, and saving goes through RookHub.
         private const string BearerHelpText =
-            "Token am einfachsten mit der RepCheck-Extension holen (" + RepCheckUrl +
-            "): auf chessable.com eingeloggt das RepCheck-Popup öffnen → \"Chessable-Token\" → \"Token kopieren\". " +
-            "Fürs Speichern wird ein RookHub-Konto benötigt (" + RookHubUrl + ").";
+            "Easiest way to get a token is the RepCheck extension (" + RepCheckUrl +
+            "): while logged in on chessable.com open the RepCheck popup → \"Chessable-Token\" → \"Token kopieren\". " +
+            "Saving needs a RookHub account (" + RookHubUrl + ").";
 
         public string LoginWithBearer(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                return $"Bearer-Token ist leer. {BearerHelpText}";
+                return $"Bearer token is empty. {BearerHelpText}";
             }
 
             text = text.Trim();
@@ -535,13 +422,13 @@ namespace piratechess_lib
             var parts = text.Split('.');
             if (parts.Length != 3 || parts.Any(string.IsNullOrWhiteSpace))
             {
-                return $"Ungültiges Token-Format: erwartet sind 3 Base64-Blöcke getrennt durch Punkte (header.payload.signature), gefunden {parts.Length}. {BearerHelpText}";
+                return $"Invalid token format: expected 3 Base64 blocks separated by dots (header.payload.signature), found {parts.Length}. {BearerHelpText}";
             }
 
             var exp = JwtHelper.GetExpiration(text);
             if (exp.HasValue && exp.Value <= DateTimeOffset.UtcNow)
             {
-                return $"Bearer-Token ist abgelaufen (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Bitte neuen Token holen. {BearerHelpText}";
+                return $"Bearer token has expired (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Please get a new one. {BearerHelpText}";
             }
 
             try
@@ -550,7 +437,7 @@ namespace piratechess_lib
             }
             catch (Exception ex)
             {
-                return $"Token konnte nicht gelesen werden: {ex.Message}. {BearerHelpText}";
+                return $"Token could not be read: {ex.Message}. {BearerHelpText}";
             }
             _bearer = text;
 

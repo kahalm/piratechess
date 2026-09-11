@@ -71,8 +71,7 @@ Chessable API  →  PirateChessLib.GetCourse()  →  Game.GeneratePGN()  →  *.
 **`JwtHelper.cs`** — `ExtractUidFromToken(jwt)` — decodes JWT payload (Base64URL) and extracts `user.uid` field. Used by both `LoginWithBearer()` and `ExtractUid()`.
 
 **`PirateChessLib.cs`** — API orchestration:
-- `Login(email, password)` — SHA-512 hashes password, POSTs to Chessable API
-- `LoginWithBearer(jwt)` — sets bearer + extracts UID from JWT
+- `LoginWithBearer(jwt)` — sets bearer + extracts UID from JWT. Email/password login was removed: Chessable blocks the API login behind Cloudflare, so the JWT bearer is the only way in.
 - `GetCourse(bid, lines, useLocalData)` → `GetChapter()` → `GetLine()` — full pipeline
 - `SleepBetweenCalls()` — sleeps 500–1500ms randomly between API calls, plus a user-configurable extra delay drawn from `ExtraDelayMinMs`..`ExtraDelayMaxMs` (both default 0, negative values clamped to 0, bounds swapped if max < min); `GetLine()` retries up to 10× with 30s sleep on empty response
 - `restResponseCourse` property — the full course cache
@@ -102,10 +101,7 @@ The CLI generates **all three variants** per `.restResponse` and saves them as `
 **WinForms** (`settings.ini`, read/written by `piratechess_Winform.INIFileHandler`):
 ```ini
 [Settings]
-useBearer=1                ; "1" = JWT bearer, "" = email/password
 bearer=<jwt>
-email=<email>
-pwd=<password>
 exportFolder=<path>
 allKeyMovesTraining=       ; "" = firstkey, "1" = allkeys, "2" = notraining
 addMoveToEmptyChapters=1   ; "1" = replace empty/null-move-only lines with "1. e4"
@@ -116,7 +112,7 @@ extraDelayMaxMs=0          ; same, upper bound (0/0 = built-in delay only)
 `INIFileHandler.ReadFromINI(path, section)` returns every key of the section as a dictionary and
 `WriteToINI(path, section, values)` takes a dictionary, so adding a setting only means adding a key.
 
-**MAUI** uses `Preferences.Get/Set()` (platform-native key-value storage) with keys: `useBearer`, `bearer`, `email`, `password`, `trainingMode` (`"firstkey"` / `"allkeys"` / `"notraining"`), `addMoveToEmpty`, `extraDelayMinMs`, `extraDelayMaxMs` (both int).
+**MAUI** uses `Preferences.Get/Set()` (platform-native key-value storage) with keys: `bearer`, `trainingMode` (`"firstkey"` / `"allkeys"` / `"notraining"`), `addMoveToEmpty`, `extraDelayMinMs`, `extraDelayMaxMs` (both int).
 
 **CLI** reads only `exportFolder` and `addMoveToEmptyChapters` from `settings.ini` (located next to the executable).
 
@@ -124,7 +120,7 @@ extraDelayMaxMs=0          ; same, upper bound (0/0 = built-in delay only)
 
 - `PirateChess.cs` — main form; runs `GetCourse()` on a background `Thread`, uses `Invoke()` for UI updates
 - `Ini.cs` — `INIFileHandler` class for reading/writing `settings.ini`
-- `Options.cs` — INI key constants (`key1`..`key10`), not the lib `Options` class
+- `Options.cs` — INI key constants, not the lib `Options` class. The numbering has gaps (`key2`/`key4`/`key5` were the removed login settings)
 - `Testdata.cs` — test/sample data
 - WinForm auto-export: when batch-exporting multiple courses, saves both `.pgn` and `.restResponse` files to the selected export folder
 

@@ -34,10 +34,7 @@ namespace piratechess_maui
         protected override void OnAppearing()
         {
             base.OnAppearing();
-            SwitchUseBearer.IsToggled = Preferences.Get("useBearer", false);
             EntryBearer.Text = Preferences.Get("bearer", "");
-            EntryEmail.Text = Preferences.Get("email", "");
-            EntryPassword.Text = Preferences.Get("password", "");
             string trainingMode = Preferences.Get("trainingMode", "firstkey");
             RadioAllKeyMoves.IsChecked = trainingMode == "allkeys";
             RadioNoTrainingMove.IsChecked = trainingMode == "notraining";
@@ -50,10 +47,7 @@ namespace piratechess_maui
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
-            Preferences.Set("useBearer", SwitchUseBearer.IsToggled);
             Preferences.Set("bearer", EntryBearer.Text ?? "");
-            Preferences.Set("email", EntryEmail.Text ?? "");
-            Preferences.Set("password", EntryPassword.Text ?? "");
             string trainingMode = RadioAllKeyMoves.IsChecked ? "allkeys"
                 : RadioNoTrainingMove.IsChecked ? "notraining"
                 : "firstkey";
@@ -67,8 +61,8 @@ namespace piratechess_maui
         }
 
         /// <summary>
-        /// Liest den Zusatz-Delay aus den beiden Eingabefeldern. Erlaubt sind nur ganze,
-        /// nicht negative Millisekunden mit Max >= Min; leer zählt als 0.
+        /// Reads the extra delay from both entry fields. Only whole, non-negative
+        /// milliseconds with max >= min are allowed; empty counts as 0.
         /// </summary>
         private bool TryGetExtraDelay(out int min, out int max)
         {
@@ -95,11 +89,7 @@ namespace piratechess_maui
 
         private async void Login()
         {
-            string result;
-            if (SwitchUseBearer.IsToggled)
-                result = _pirate.LoginWithBearer(EntryBearer.Text);
-            else
-                result = _pirate.Login(EntryEmail.Text, EntryPassword.Text);
+            string result = _pirate.LoginWithBearer(EntryBearer.Text);
 
             if (result != "")
                 await Shell.Current.DisplayAlert("Error", result, "OK");
@@ -107,12 +97,6 @@ namespace piratechess_maui
                 await Shell.Current.DisplayAlert("Login ok", "Login ok", "OK");
         }
 
-        private void OnSwitchUseBearerToggled(object sender, ToggledEventArgs e)
-        {
-            EntryBearer.IsVisible = e.Value;
-            EntryEmail.IsVisible = !e.Value;
-            EntryPassword.IsVisible = !e.Value;
-        }
         private void OnButtonLoadChapterClicked(object sender, EventArgs e)
         {
             LoadChaptersAsync();
@@ -172,13 +156,13 @@ namespace piratechess_maui
                     _lastPgn = pgn ?? "";
                     string pgnSnapshot = _lastPgn;
                     AppendLog($"{coursename}: {_pirate.ErrorCount} error(s)");
-                    AppendLog("Alles geladen – PGN wird angezeigt ...");
+                    AppendLog("All data loaded - rendering PGN ...");
 
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         EditorPgn.Text = pgnSnapshot;
                         _elapsedTimer?.Stop();
-                        AppendLog("Fertig.");
+                        AppendLog("Done.");
                     });
                 }
                 catch (Exception ex)

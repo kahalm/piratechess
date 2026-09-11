@@ -8,11 +8,11 @@ public static class JwtHelper
     public static int ExtractUidFromToken(string jwtToken)
     {
         if (string.IsNullOrWhiteSpace(jwtToken))
-            throw new ArgumentException("Token darf nicht leer sein.", nameof(jwtToken));
+            throw new ArgumentException("Token must not be empty.", nameof(jwtToken));
 
         var parts = jwtToken.Split('.');
         if (parts.Length < 2)
-            throw new ArgumentException("Ungültiges JWT-Format.");
+            throw new ArgumentException("Invalid JWT format.");
 
         string payload = parts[1];
         string json = DecodeBase64Url(payload);
@@ -26,7 +26,7 @@ public static class JwtHelper
             return uidElement.GetInt32();
         }
 
-        throw new InvalidOperationException("UID konnte im Token nicht gefunden werden.");
+        throw new InvalidOperationException("UID could not be found in the token.");
     }
 
     public static DateTimeOffset? GetExpiration(string jwtToken)

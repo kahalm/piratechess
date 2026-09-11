@@ -31,21 +31,15 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PirateChess));
             buttonParseAll = new Button();
             textBoxPGN = new TextBox();
-            labelDurchlauf = new Label();
-            textBoxDurchlauf = new TextBox();
+            labelChapter = new Label();
+            textBoxChapter = new TextBox();
             label4 = new Label();
             textBoxCurLines = new TextBox();
             buttonFirstTenLines = new Button();
             label5 = new Label();
             textBoxCumulativeLines = new TextBox();
             buttonSavePNG = new Button();
-            textBoxPwd = new TextBox();
-            labelPwd = new Label();
-            labelEmail = new Label();
-            textBoxEmail = new TextBox();
             buttonLogin = new Button();
-            radioButtonLogin = new RadioButton();
-            radioButtonBearer = new RadioButton();
             buttonLoadChapters = new Button();
             checkedListBoxChapters = new CheckedListBox();
             buttonSelectAll = new Button();
@@ -108,23 +102,23 @@
             textBoxCourse.TabIndex = 37;
             textBoxCourse.Text = "0/0";
             //
-            // labelDurchlauf
+            // labelChapter
             //
-            labelDurchlauf.AutoSize = true;
-            labelDurchlauf.Location = new Point(676, 362);
-            labelDurchlauf.Name = "labelDurchlauf";
-            labelDurchlauf.Size = new Size(59, 20);
-            labelDurchlauf.TabIndex = 13;
-            labelDurchlauf.Text = "chapter";
+            labelChapter.AutoSize = true;
+            labelChapter.Location = new Point(676, 362);
+            labelChapter.Name = "labelChapter";
+            labelChapter.Size = new Size(59, 20);
+            labelChapter.TabIndex = 13;
+            labelChapter.Text = "chapter";
             // 
-            // textBoxDurchlauf
+            // textBoxChapter
             // 
-            textBoxDurchlauf.Enabled = false;
-            textBoxDurchlauf.Location = new Point(760, 359);
-            textBoxDurchlauf.Name = "textBoxDurchlauf";
-            textBoxDurchlauf.Size = new Size(125, 27);
-            textBoxDurchlauf.TabIndex = 12;
-            textBoxDurchlauf.Text = "0";
+            textBoxChapter.Enabled = false;
+            textBoxChapter.Location = new Point(760, 359);
+            textBoxChapter.Name = "textBoxChapter";
+            textBoxChapter.Size = new Size(125, 27);
+            textBoxChapter.TabIndex = 12;
+            textBoxChapter.Text = "0";
             // 
             // label4
             // 
@@ -185,38 +179,6 @@
             buttonSavePNG.UseVisualStyleBackColor = true;
             buttonSavePNG.Click += ButtonSavePNG_Click;
             // 
-            // textBoxPwd
-            // 
-            textBoxPwd.Location = new Point(126, 177);
-            textBoxPwd.Name = "textBoxPwd";
-            textBoxPwd.Size = new Size(125, 27);
-            textBoxPwd.TabIndex = 24;
-            // 
-            // labelPwd
-            // 
-            labelPwd.AutoSize = true;
-            labelPwd.Location = new Point(46, 177);
-            labelPwd.Name = "labelPwd";
-            labelPwd.Size = new Size(70, 20);
-            labelPwd.TabIndex = 23;
-            labelPwd.Text = "Password";
-            // 
-            // labelEmail
-            // 
-            labelEmail.AutoSize = true;
-            labelEmail.Location = new Point(46, 141);
-            labelEmail.Name = "labelEmail";
-            labelEmail.Size = new Size(46, 20);
-            labelEmail.TabIndex = 22;
-            labelEmail.Text = "Email";
-            // 
-            // textBoxEmail
-            // 
-            textBoxEmail.Location = new Point(126, 141);
-            textBoxEmail.Name = "textBoxEmail";
-            textBoxEmail.Size = new Size(125, 27);
-            textBoxEmail.TabIndex = 21;
-            // 
             // buttonLogin
             // 
             buttonLogin.Location = new Point(62, 423);
@@ -226,31 +188,6 @@
             buttonLogin.Text = "Login";
             buttonLogin.UseVisualStyleBackColor = true;
             buttonLogin.Click += ButtonLogin_Click;
-            // 
-            // radioButtonLogin
-            // 
-            radioButtonLogin.AutoSize = true;
-            radioButtonLogin.Checked = true;
-            radioButtonLogin.Location = new Point(62, 37);
-            radioButtonLogin.Margin = new Padding(3, 4, 3, 4);
-            radioButtonLogin.Name = "radioButtonLogin";
-            radioButtonLogin.Size = new Size(67, 24);
-            radioButtonLogin.TabIndex = 26;
-            radioButtonLogin.TabStop = true;
-            radioButtonLogin.Text = "Login";
-            radioButtonLogin.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonBearer
-            // 
-            radioButtonBearer.AutoSize = true;
-            radioButtonBearer.Location = new Point(176, 37);
-            radioButtonBearer.Margin = new Padding(3, 4, 3, 4);
-            radioButtonBearer.Name = "radioButtonBearer";
-            radioButtonBearer.Size = new Size(73, 24);
-            radioButtonBearer.TabIndex = 27;
-            radioButtonBearer.Text = "Bearer";
-            radioButtonBearer.UseVisualStyleBackColor = true;
-            radioButtonBearer.CheckedChanged += RadioButtonBearer_CheckedChanged;
             // 
             // buttonLoadChapters
             // 
@@ -286,7 +223,7 @@
             // labelBearer
             // 
             labelBearer.AutoSize = true;
-            labelBearer.Location = new Point(46, 104);
+            labelBearer.Location = new Point(46, 40);
             labelBearer.Name = "labelBearer";
             labelBearer.Size = new Size(52, 20);
             labelBearer.TabIndex = 32;
@@ -294,9 +231,9 @@
             // 
             // textBoxBearer
             // 
-            textBoxBearer.Location = new Point(126, 104);
+            textBoxBearer.Location = new Point(126, 37);
             textBoxBearer.Name = "textBoxBearer";
-            textBoxBearer.Size = new Size(125, 27);
+            textBoxBearer.Size = new Size(229, 27);
             textBoxBearer.TabIndex = 31;
             // 
             // buttonSaveRestResponse
@@ -446,13 +383,7 @@
             Controls.Add(checkedListBoxChapters);
             Controls.Add(buttonSelectAll);
             Controls.Add(buttonLoadChapters);
-            Controls.Add(radioButtonBearer);
-            Controls.Add(radioButtonLogin);
             Controls.Add(buttonLogin);
-            Controls.Add(textBoxPwd);
-            Controls.Add(labelPwd);
-            Controls.Add(labelEmail);
-            Controls.Add(textBoxEmail);
             Controls.Add(buttonSavePNG);
             Controls.Add(label5);
             Controls.Add(textBoxCumulativeLines);
@@ -461,8 +392,8 @@
             Controls.Add(textBoxCurLines);
             Controls.Add(labelCourse);
             Controls.Add(textBoxCourse);
-            Controls.Add(labelDurchlauf);
-            Controls.Add(textBoxDurchlauf);
+            Controls.Add(labelChapter);
+            Controls.Add(textBoxChapter);
             Controls.Add(textBoxPGN);
             Controls.Add(textBoxLog);
             Controls.Add(labelElapsed);
@@ -484,21 +415,15 @@
 
         private Button buttonParseAll;
         private TextBox textBoxPGN;
-        private Label labelDurchlauf;
-        private TextBox textBoxDurchlauf;
+        private Label labelChapter;
+        private TextBox textBoxChapter;
         private Label label4;
         private TextBox textBoxCurLines;
         private Button buttonFirstTenLines;
         private Label label5;
         private TextBox textBoxCumulativeLines;
         private Button buttonSavePNG;
-        private TextBox textBoxPwd;
-        private Label labelPwd;
-        private Label labelEmail;
-        private TextBox textBoxEmail;
         private Button buttonLogin;
-        private RadioButton radioButtonLogin;
-        private RadioButton radioButtonBearer;
         private Button buttonLoadChapters;
         private CheckedListBox checkedListBoxChapters;
         private Button buttonSelectAll;

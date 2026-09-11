@@ -402,7 +402,7 @@ namespace piratechess_lib
     {
         public string State { get; set; } = string.Empty;
         public string Key { get; set; } = string.Empty;
-        public JsonElement? Val { get; set; } //entweder eine Liste von itemList oder ein string.
+        public JsonElement? Val { get; set; } // either a list of itemList or a string.
         public string CommentAfter
         {
             get
@@ -554,19 +554,6 @@ namespace piratechess_lib
         [GeneratedRegex(@"@@StartFEN@@(.+?)@@EndFEN@@")]
         private static partial Regex findFenTags();
 
-    }
-
-    public partial class ResponseLogin
-    {
-        public string Jwt { get; set; } = string.Empty;
-
-        public int Uid
-        {
-            get
-            {
-                return JwtHelper.ExtractUidFromToken(Jwt);
-            }
-        }
     }
 
     public partial class ResponseChapterList
