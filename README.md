@@ -30,7 +30,7 @@ Every release ships each Windows build twice. Same program, different packaging:
 | `piratechess_winform-needs-dotnet9.exe` | ~3 MB | [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/9.0) installed |
 | `piratechess_winform-win-x86-needs-dotnet9.exe` | ~3 MB | same, 32-bit machines |
 | `piratechess_maui-win-x64.exe` | ~240 MB | none |
-| `piratechess_maui-win-x64-needs-dotnet9.exe` | ~117 MB | .NET 9 Desktop Runtime installed |
+| `piratechess_maui-win-x64-needs-dotnet9.exe` | ~99 MB | .NET 9 Desktop Runtime installed |
 
 If in doubt take `piratechess_winform.exe`. It is the big one, but it just runs. The
 `-needs-dotnet9` files are for machines that already have the runtime and where the
