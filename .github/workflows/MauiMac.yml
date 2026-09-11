@@ -14,6 +14,18 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
+      - name: Select Xcode 26.5
+        # The .NET for iOS/MacCatalyst workload (26.5.x) insists on exactly Xcode 26.5,
+        # while the macos-26 runner defaults to 26.6. Both are installed on the image.
+        run: |
+          if [ -d /Applications/Xcode_26.5.app ]; then
+            sudo xcode-select -s /Applications/Xcode_26.5.app
+          else
+            echo "Xcode 26.5 not found. Installed versions:"
+            ls -d /Applications/Xcode*.app
+          fi
+          xcodebuild -version
+
       - name: .NET SDK einrichten für MAUI (macOS)
         uses: actions/setup-dotnet@v4
         with:
