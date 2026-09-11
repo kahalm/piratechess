@@ -30,6 +30,8 @@ Steps to use the program:
 
 * If you select multiple courses it automaticly saves rawresponse and pgn
 
+* **Extra delay**: between two server calls the program already waits a random 500-1500 ms. In the Settings box (Winform) resp. the "Extra delay between calls (ms)" fields (Maui) you can add your own extra wait on top of that, as a random value between your min and max. Both values are milliseconds and must be positive; 0/0 means only the built-in delay. Raise it if you still hit server limits, but keep in mind that every step adds up over a whole course.
+
 No Video export and none planned.
 
 Currently only exporting Moves & Text.
@@ -53,7 +55,9 @@ Instead of digging through the DevTools network tab, you can grab the token with
 * **Extension**: while logged in on chessable.com, open the RepCheck toolbar popup → "Chessable-Token" → **"Token kopieren"**, then paste the token into PirateChess.
 * **Userscript**: on chessable.com open the Tampermonkey menu → **"🔑 Chessable-Token kopieren"**.
 
-The token is read locally from `localStorage['chessable.web.production.JWT']` and only copied to your clipboard — it is never sent anywhere.
+The token is read locally from `localStorage['chessable.web.production.JWT']` and only copied to your clipboard — it is never sent anywhere. Saving in RepCheck needs a [RookHub](https://rookhub.oberschmid.homes) account.
+
+PirateChess points at both in its bearer-token error messages.
 
 Gui very barebone for now - especially the dropdownbox is barely visible in Maui when empty.
 ![image](https://github.com/user-attachments/assets/0f7a25a7-ad2a-4143-84b1-d5ba3c9f789c)

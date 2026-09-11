@@ -23,6 +23,31 @@ namespace piratechess_lib
         public bool NoTrainingMove { get; set; } = false;
         public bool AddMoveToEmptyChapters { get; set; } = false;
 
+        private int _extraDelayMinMs = 0;
+        private int _extraDelayMaxMs = 0;
+
+        /// <summary>
+        /// Untere Grenze der zusätzlichen Wartezeit in ms, die auf den eingebauten
+        /// Delay von 500-1500 ms zwischen zwei Chessable-Calls draufkommt.
+        /// Negative Werte werden auf 0 gesetzt.
+        /// </summary>
+        public int ExtraDelayMinMs
+        {
+            get => _extraDelayMinMs;
+            set => _extraDelayMinMs = value < 0 ? 0 : value;
+        }
+
+        /// <summary>
+        /// Obere Grenze der zusätzlichen Wartezeit in ms. Negative Werte werden auf 0
+        /// gesetzt; liegt der Wert unter <see cref="ExtraDelayMinMs"/>, werden die beiden
+        /// Grenzen beim Warten getauscht.
+        /// </summary>
+        public int ExtraDelayMaxMs
+        {
+            get => _extraDelayMaxMs;
+            set => _extraDelayMaxMs = value < 0 ? 0 : value;
+        }
+
         public PirateChessLib()
         {
 
@@ -90,10 +115,9 @@ namespace piratechess_lib
                     var chapterName = GetChapter(Options.GetOptions(), lines, chapterCounter, bid, item.Id.ToString(), useLocalData);
                     if (!string.IsNullOrEmpty(chapterName))
                         coursename = chapterName; // übersprungene/leere Kapitel sollen den Kursnamen nicht überschreiben
-                    Random rand = new();
                     if (!useLocalData)
                     {
-                        System.Threading.Thread.Sleep(rand.Next(500, 1500));
+                        SleepBetweenCalls();
                     }
                     if (lines <= _cumLines)
                     {
@@ -102,6 +126,24 @@ namespace piratechess_lib
                 }
             }
             return (_pgn.ToString(), coursename);
+        }
+
+        /// <summary>
+        /// Wartet zwischen zwei Chessable-Calls: eingebauter Grundschutz von 500-1500 ms
+        /// plus der in der GUI gesetzte Zusatz-Delay aus <see cref="ExtraDelayMinMs"/> und
+        /// <see cref="ExtraDelayMaxMs"/>.
+        /// </summary>
+        private void SleepBetweenCalls()
+        {
+            int extraMin = _extraDelayMinMs;
+            int extraMax = _extraDelayMaxMs;
+            if (extraMax < extraMin)
+            {
+                (extraMin, extraMax) = (extraMax, extraMin);
+            }
+
+            int extra = extraMax > extraMin ? Random.Shared.Next(extraMin, extraMax + 1) : extraMin;
+            System.Threading.Thread.Sleep(Random.Shared.Next(500, 1500) + extra);
         }
 
         private string GetChapter(JsonSerializerOptions caseInvariant, int lines, int chapter, string bid, string lid, bool useLocalData)
@@ -165,10 +207,9 @@ namespace piratechess_lib
 
                     GetLine(Options.GetOptions(), pgnHeader, line.Id.ToString(), restResponseChapter, count, useLocalData);
 
-                    Random rand = new();
                     if (!useLocalData)
                     {
-                        System.Threading.Thread.Sleep(rand.Next(500, 1500));
+                        SleepBetweenCalls();
                     }
 
                     if (lines < _cumLines)
@@ -208,7 +249,7 @@ namespace piratechess_lib
                     {
                         _errorCount++;
                         _retryEvent?.Invoke($"[{round}] Retry {attempt + 1}/10 ...");
-                        System.Threading.Thread.Sleep(30000 + new Random().Next(0, 5000));
+                        System.Threading.Thread.Sleep(30000 + Random.Shared.Next(0, 5000));
                     }
                     else
                     {
@@ -468,13 +509,21 @@ namespace piratechess_lib
             return "";
         }
 
-        private const string BearerHelpUrl = "https://github.com/kahalm/piratechess#get-bearer-token";
+        private const string RepCheckUrl = "https://github.com/kahalm/repcheck";
+        private const string RookHubUrl = "https://rookhub.oberschmid.homes";
+
+        // Hinweis, der an jede Bearer-Fehlermeldung angehängt wird: Token holt man am
+        // bequemsten mit der RepCheck-Extension, gespeichert wird über RookHub.
+        private const string BearerHelpText =
+            "Token am einfachsten mit der RepCheck-Extension holen (" + RepCheckUrl +
+            "): auf chessable.com eingeloggt das RepCheck-Popup öffnen → \"Chessable-Token\" → \"Token kopieren\". " +
+            "Fürs Speichern wird ein RookHub-Konto benötigt (" + RookHubUrl + ").";
 
         public string LoginWithBearer(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                return $"Bearer-Token ist leer. Anleitung: {BearerHelpUrl}";
+                return $"Bearer-Token ist leer. {BearerHelpText}";
             }
 
             text = text.Trim();
@@ -486,13 +535,13 @@ namespace piratechess_lib
             var parts = text.Split('.');
             if (parts.Length != 3 || parts.Any(string.IsNullOrWhiteSpace))
             {
-                return $"Ungültiges Token-Format: erwartet sind 3 Base64-Blöcke getrennt durch Punkte (header.payload.signature), gefunden {parts.Length}. Anleitung: {BearerHelpUrl}";
+                return $"Ungültiges Token-Format: erwartet sind 3 Base64-Blöcke getrennt durch Punkte (header.payload.signature), gefunden {parts.Length}. {BearerHelpText}";
             }
 
             var exp = JwtHelper.GetExpiration(text);
             if (exp.HasValue && exp.Value <= DateTimeOffset.UtcNow)
             {
-                return $"Bearer-Token ist abgelaufen (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Bitte neuen Token holen. Anleitung: {BearerHelpUrl}";
+                return $"Bearer-Token ist abgelaufen (exp: {exp.Value.UtcDateTime:yyyy-MM-dd HH:mm} UTC). Bitte neuen Token holen. {BearerHelpText}";
             }
 
             try
@@ -501,7 +550,7 @@ namespace piratechess_lib
             }
             catch (Exception ex)
             {
-                return $"Token konnte nicht gelesen werden: {ex.Message}. Anleitung: {BearerHelpUrl}";
+                return $"Token konnte nicht gelesen werden: {ex.Message}. {BearerHelpText}";
             }
             _bearer = text;
 

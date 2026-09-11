@@ -62,6 +62,12 @@
             radioButtonAllKeyMoves = new RadioButton();
             radioButtonNoTrainingMove = new RadioButton();
             checkBoxAddMoveEmptyChapters = new CheckBox();
+            labelExtraDelayMin = new Label();
+            numericExtraDelayMin = new NumericUpDown();
+            labelExtraDelayMax = new Label();
+            numericExtraDelayMax = new NumericUpDown();
+            ((System.ComponentModel.ISupportInitialize)numericExtraDelayMin).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numericExtraDelayMax).BeginInit();
             groupBoxSettings.SuspendLayout();
             SuspendLayout();
             // 
@@ -335,7 +341,7 @@
             //
             groupBoxSettings.Location = new Point(1008, 28);
             groupBoxSettings.Name = "groupBoxSettings";
-            groupBoxSettings.Size = new Size(305, 155);
+            groupBoxSettings.Size = new Size(305, 235);
             groupBoxSettings.TabIndex = 38;
             groupBoxSettings.TabStop = false;
             groupBoxSettings.Text = "Settings";
@@ -343,6 +349,10 @@
             groupBoxSettings.Controls.Add(radioButtonAllKeyMoves);
             groupBoxSettings.Controls.Add(radioButtonNoTrainingMove);
             groupBoxSettings.Controls.Add(checkBoxAddMoveEmptyChapters);
+            groupBoxSettings.Controls.Add(labelExtraDelayMin);
+            groupBoxSettings.Controls.Add(numericExtraDelayMin);
+            groupBoxSettings.Controls.Add(labelExtraDelayMax);
+            groupBoxSettings.Controls.Add(numericExtraDelayMax);
             //
             // radioButtonFirstKeyMove
             //
@@ -382,6 +392,48 @@
             checkBoxAddMoveEmptyChapters.Text = "Add move to empty chapters";
             checkBoxAddMoveEmptyChapters.UseVisualStyleBackColor = true;
             //
+            // labelExtraDelayMin
+            //
+            labelExtraDelayMin.AutoSize = true;
+            labelExtraDelayMin.Location = new Point(12, 158);
+            labelExtraDelayMin.Name = "labelExtraDelayMin";
+            labelExtraDelayMin.TabIndex = 4;
+            labelExtraDelayMin.Text = "Extra delay min (ms)";
+            //
+            // numericExtraDelayMin
+            //
+            numericExtraDelayMin.Increment = new decimal(new int[] { 100, 0, 0, 0 });
+            numericExtraDelayMin.Location = new Point(185, 155);
+            numericExtraDelayMin.Maximum = new decimal(new int[] { 600000, 0, 0, 0 });
+            numericExtraDelayMin.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
+            numericExtraDelayMin.Name = "numericExtraDelayMin";
+            numericExtraDelayMin.Size = new Size(105, 27);
+            numericExtraDelayMin.TabIndex = 5;
+            numericExtraDelayMin.TextAlign = HorizontalAlignment.Right;
+            numericExtraDelayMin.ThousandsSeparator = true;
+            numericExtraDelayMin.ValueChanged += NumericExtraDelayMin_ValueChanged;
+            //
+            // labelExtraDelayMax
+            //
+            labelExtraDelayMax.AutoSize = true;
+            labelExtraDelayMax.Location = new Point(12, 196);
+            labelExtraDelayMax.Name = "labelExtraDelayMax";
+            labelExtraDelayMax.TabIndex = 6;
+            labelExtraDelayMax.Text = "Extra delay max (ms)";
+            //
+            // numericExtraDelayMax
+            //
+            numericExtraDelayMax.Increment = new decimal(new int[] { 100, 0, 0, 0 });
+            numericExtraDelayMax.Location = new Point(185, 193);
+            numericExtraDelayMax.Maximum = new decimal(new int[] { 600000, 0, 0, 0 });
+            numericExtraDelayMax.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
+            numericExtraDelayMax.Name = "numericExtraDelayMax";
+            numericExtraDelayMax.Size = new Size(105, 27);
+            numericExtraDelayMax.TabIndex = 7;
+            numericExtraDelayMax.TextAlign = HorizontalAlignment.Right;
+            numericExtraDelayMax.ThousandsSeparator = true;
+            numericExtraDelayMax.ValueChanged += NumericExtraDelayMax_ValueChanged;
+            //
             // PirateChess
             //
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -420,6 +472,8 @@
             Name = "PirateChess";
             Text = "Piratechess";
             Load += PirateChess_Load;
+            ((System.ComponentModel.ISupportInitialize)numericExtraDelayMin).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numericExtraDelayMax).EndInit();
             groupBoxSettings.ResumeLayout(false);
             groupBoxSettings.PerformLayout();
             ResumeLayout(false);
@@ -461,5 +515,9 @@
         private RadioButton radioButtonAllKeyMoves;
         private RadioButton radioButtonNoTrainingMove;
         private CheckBox checkBoxAddMoveEmptyChapters;
+        private Label labelExtraDelayMin;
+        private NumericUpDown numericExtraDelayMin;
+        private Label labelExtraDelayMax;
+        private NumericUpDown numericExtraDelayMax;
     }
 }

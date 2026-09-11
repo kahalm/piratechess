@@ -43,6 +43,8 @@ namespace piratechess_maui
             RadioNoTrainingMove.IsChecked = trainingMode == "notraining";
             RadioFirstKeyMove.IsChecked = trainingMode == "firstkey";
             CheckBoxAddMoveEmptyChapters.IsChecked = Preferences.Get("addMoveToEmpty", false);
+            EntryExtraDelayMin.Text = Preferences.Get("extraDelayMinMs", 0).ToString();
+            EntryExtraDelayMax.Text = Preferences.Get("extraDelayMaxMs", 0).ToString();
         }
 
         protected override void OnDisappearing()
@@ -57,6 +59,29 @@ namespace piratechess_maui
                 : "firstkey";
             Preferences.Set("trainingMode", trainingMode);
             Preferences.Set("addMoveToEmpty", CheckBoxAddMoveEmptyChapters.IsChecked);
+            if (TryGetExtraDelay(out int extraDelayMin, out int extraDelayMax))
+            {
+                Preferences.Set("extraDelayMinMs", extraDelayMin);
+                Preferences.Set("extraDelayMaxMs", extraDelayMax);
+            }
+        }
+
+        /// <summary>
+        /// Liest den Zusatz-Delay aus den beiden Eingabefeldern. Erlaubt sind nur ganze,
+        /// nicht negative Millisekunden mit Max >= Min; leer zählt als 0.
+        /// </summary>
+        private bool TryGetExtraDelay(out int min, out int max)
+        {
+            max = 0;
+            string minText = EntryExtraDelayMin.Text?.Trim() ?? "";
+            string maxText = EntryExtraDelayMax.Text?.Trim() ?? "";
+
+            if (!int.TryParse(minText.Length == 0 ? "0" : minText, out min))
+                return false;
+            if (!int.TryParse(maxText.Length == 0 ? "0" : maxText, out max))
+                return false;
+
+            return min >= 0 && max >= min;
         }
 
         private void OnButtonFirstTenLinesClicked(object sender, EventArgs e)
@@ -114,6 +139,13 @@ namespace piratechess_maui
                 return;
             }
 
+            if (!TryGetExtraDelay(out int extraDelayMin, out int extraDelayMax))
+            {
+                await Shell.Current.DisplayAlert("Warning",
+                    "Extra delay must be a positive number of milliseconds, and max must not be smaller than min.", "OK");
+                return;
+            }
+
             var selected = (KeyValuePair<string, string>)myPicker.SelectedItem;
             _pirate.SetChapterCounterEvent(ChapterCounter);
             _pirate.SetLineCounterEvent(LineCounter);
@@ -134,6 +166,8 @@ namespace piratechess_maui
                     _pirate.AllKeyMovesTraining = allKeyMoves;
                     _pirate.NoTrainingMove = noTrainingMove;
                     _pirate.AddMoveToEmptyChapters = addMoveToEmpty;
+                    _pirate.ExtraDelayMinMs = extraDelayMin;
+                    _pirate.ExtraDelayMaxMs = extraDelayMax;
                     (var pgn, var coursename) = _pirate.GetCourse(selected.Key, maxLines);
                     _lastPgn = pgn ?? "";
                     string pgnSnapshot = _lastPgn;

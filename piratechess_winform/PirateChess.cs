@@ -18,7 +18,7 @@ namespace piratechess_Winform
 
 
             // Read values from INI
-            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section, Options.key1, Options.key2, Options.key3, Options.key4, Options.key5, Options.key6, Options.key7, Options.key8);
+            var settings = INIFileHandler.ReadFromINI(Options.filePath, Options.section);
             /* if (!settings.TryGetValue(Options.key1, out string? value1))
              {
                  value1 = "";
@@ -51,6 +51,14 @@ namespace piratechess_Winform
             {
                 value8 = "";
             }
+            if (!settings.TryGetValue(Options.key9, out string? value9))
+            {
+                value9 = "";
+            }
+            if (!settings.TryGetValue(Options.key10, out string? value10))
+            {
+                value10 = "";
+            }
 
             if (value2 == "1")
             {
@@ -68,6 +76,10 @@ namespace piratechess_Winform
             radioButtonNoTrainingMove.Checked = value7 == "2";
             radioButtonFirstKeyMove.Checked = value7 != "1" && value7 != "2";
             checkBoxAddMoveEmptyChapters.Checked = value8 == "1";
+            numericExtraDelayMin.Value = ClampToDelayRange(value9);
+            numericExtraDelayMax.Value = ClampToDelayRange(value10);
+            if (numericExtraDelayMax.Value < numericExtraDelayMin.Value)
+                numericExtraDelayMax.Value = numericExtraDelayMin.Value;
 
             setEditVisibility();
 
@@ -85,10 +97,19 @@ namespace piratechess_Winform
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             // Write values to INI
-            INIFileHandler.WriteToINI(Options.filePath, Options.section, Options.key1, "",
-                Options.key2, radioButtonBearer.Checked ? "1" : "", Options.key3, textBoxBearer.Text, Options.key4, textBoxEmail.Text, Options.key5, textBoxPwd.Text,
-                Options.key6, _exportFolder, Options.key7, radioButtonAllKeyMoves.Checked ? "1" : radioButtonNoTrainingMove.Checked ? "2" : "",
-                Options.key8, checkBoxAddMoveEmptyChapters.Checked ? "1" : "");
+            INIFileHandler.WriteToINI(Options.filePath, Options.section, new Dictionary<string, string>
+            {
+                [Options.key1] = "",
+                [Options.key2] = radioButtonBearer.Checked ? "1" : "",
+                [Options.key3] = textBoxBearer.Text,
+                [Options.key4] = textBoxEmail.Text,
+                [Options.key5] = textBoxPwd.Text,
+                [Options.key6] = _exportFolder,
+                [Options.key7] = radioButtonAllKeyMoves.Checked ? "1" : radioButtonNoTrainingMove.Checked ? "2" : "",
+                [Options.key8] = checkBoxAddMoveEmptyChapters.Checked ? "1" : "",
+                [Options.key9] = ((int)numericExtraDelayMin.Value).ToString(),
+                [Options.key10] = ((int)numericExtraDelayMax.Value).ToString(),
+            });
 
             base.OnFormClosed(e);
         }
@@ -132,11 +153,15 @@ namespace piratechess_Winform
             bool allKeyMoves = radioButtonAllKeyMoves.Checked;
             bool noTrainingMove = radioButtonNoTrainingMove.Checked;
             bool addMoveToEmptyChapters = checkBoxAddMoveEmptyChapters.Checked;
+            int extraDelayMin = (int)numericExtraDelayMin.Value;
+            int extraDelayMax = (int)numericExtraDelayMax.Value;
             new Thread(() =>
             {
                 _pirate.AllKeyMovesTraining = allKeyMoves;
                 _pirate.NoTrainingMove = noTrainingMove;
                 _pirate.AddMoveToEmptyChapters = addMoveToEmptyChapters;
+                _pirate.ExtraDelayMinMs = extraDelayMin;
+                _pirate.ExtraDelayMaxMs = extraDelayMax;
                 var allPgn = new StringBuilder();
                 if (useLocalData)
                 {
@@ -230,6 +255,27 @@ namespace piratechess_Winform
             {
                 textBoxLog.AppendText(message + Environment.NewLine);
             }));
+        }
+
+        // Liest einen ms-Wert aus der INI und hält ihn im erlaubten Bereich des Spinners.
+        // Negatives, leeres oder unlesbares wird zu 0.
+        private decimal ClampToDelayRange(string value)
+        {
+            if (!int.TryParse(value, out int ms) || ms < 0)
+                ms = 0;
+            return Math.Min(ms, (int)numericExtraDelayMin.Maximum);
+        }
+
+        private void NumericExtraDelayMin_ValueChanged(object sender, EventArgs e)
+        {
+            if (numericExtraDelayMax.Value < numericExtraDelayMin.Value)
+                numericExtraDelayMax.Value = numericExtraDelayMin.Value;
+        }
+
+        private void NumericExtraDelayMax_ValueChanged(object sender, EventArgs e)
+        {
+            if (numericExtraDelayMin.Value > numericExtraDelayMax.Value)
+                numericExtraDelayMin.Value = numericExtraDelayMax.Value;
         }
 
         private void SetButtonsEnabledState(bool state)

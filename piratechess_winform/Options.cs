@@ -12,6 +12,8 @@
         public static string key6 = "exportFolder";
         public static string key7 = "allKeyMovesTraining";
         public static string key8 = "addMoveToEmptyChapters";
+        public static string key9 = "extraDelayMinMs";
+        public static string key10 = "extraDelayMaxMs";
 
     }
 }

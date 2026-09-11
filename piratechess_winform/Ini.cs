@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace piratechess_Winform
 {
@@ -6,7 +6,7 @@ namespace piratechess_Winform
     class INIFileHandler
     {
         // Method to write string values to an INI file
-        public static void WriteToINI(string filePath, string section, string key1, string value1, string key2, string value2, string key3, string value3, string key4, string value4, string key5, string value5, string key6 = "", string value6 = "", string key7 = "", string value7 = "", string key8 = "", string value8 = "")
+        public static void WriteToINI(string filePath, string section, IDictionary<string, string> values)
         {
             StringBuilder iniContent = new();
 
@@ -14,36 +14,31 @@ namespace piratechess_Winform
             iniContent.AppendLine($"[{section}]");
 
             // Add key-value pairs
-            iniContent.AppendLine($"{key1}={value1}");
-            iniContent.AppendLine($"{key2}={value2}");
-            iniContent.AppendLine($"{key3}={value3}");
-            iniContent.AppendLine($"{key4}={value4}");
-            iniContent.AppendLine($"{key5}={value5}");
-            if (!string.IsNullOrEmpty(key6))
-                iniContent.AppendLine($"{key6}={value6}");
-            if (!string.IsNullOrEmpty(key7))
-                iniContent.AppendLine($"{key7}={value7}");
-            if (!string.IsNullOrEmpty(key8))
-                iniContent.AppendLine($"{key8}={value8}");
+            foreach (var entry in values)
+            {
+                if (string.IsNullOrEmpty(entry.Key))
+                    continue;
+                iniContent.AppendLine($"{entry.Key}={entry.Value}");
+            }
 
             // Write to the file
             File.WriteAllText(filePath, iniContent.ToString());
         }
 
-        // Method to read string values from an INI file
-        public static Dictionary<string, string> ReadFromINI(string filePath, string section, string key1, string key2, string key3, string key4, string key5, string key6 = "", string key7 = "", string key8 = "")
+        // Method to read all key-value pairs of a section from an INI file
+        public static Dictionary<string, string> ReadFromINI(string filePath, string section)
         {
+            Dictionary<string, string> values = [];
+
             if (!File.Exists(filePath))
             {
                 Console.WriteLine("INI file does not exist.");
-                return [];
+                return values;
             }
 
-            string[] lines = File.ReadAllLines(filePath);
             string currentSection = "";
-            string value1 = "", value2 = "", value3 = "", value4 = "", value5 = "", value6 = "", value7 = "", value8 = "";
 
-            foreach (var line in lines)
+            foreach (var line in File.ReadAllLines(filePath))
             {
                 // Ignore comments and empty lines
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith(';'))
@@ -53,41 +48,19 @@ namespace piratechess_Winform
                 if (line.StartsWith('[') && line.EndsWith(']'))
                 {
                     currentSection = line.Trim('[', ']');
+                    continue;
                 }
 
-                // If we're in the right section, check for key-value pairs
-                if (currentSection == section)
-                {
-                    var parts = line.Split('=', 2);
-                    if (parts.Length < 2) continue;
-                    string k = parts[0], v = parts[1];
-                    if (k == key1) value1 = v;
-                    else if (k == key2) value2 = v;
-                    else if (k == key3) value3 = v;
-                    else if (k == key4) value4 = v;
-                    else if (k == key5) value5 = v;
-                    else if (!string.IsNullOrEmpty(key6) && k == key6) value6 = v;
-                    else if (!string.IsNullOrEmpty(key7) && k == key7) value7 = v;
-                    else if (!string.IsNullOrEmpty(key8) && k == key8) value8 = v;
-                }
+                // If we're in the right section, collect key-value pairs
+                if (currentSection != section)
+                    continue;
+
+                var parts = line.Split('=', 2);
+                if (parts.Length < 2) continue;
+                values[parts[0]] = parts[1];
             }
 
-            Dictionary<string, string> dict = new()
-            {
-                { key1, value1 },
-                { key2, value2 },
-                { key3, value3 },
-                { key4, value4 },
-                { key5, value5 }
-            };
-            if (!string.IsNullOrEmpty(key6))
-                dict[key6] = value6;
-            if (!string.IsNullOrEmpty(key7))
-                dict[key7] = value7;
-            if (!string.IsNullOrEmpty(key8))
-                dict[key8] = value8;
-
-            return dict;
+            return values;
         }
     }
 }
