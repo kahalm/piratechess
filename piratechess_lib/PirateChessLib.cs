@@ -278,7 +278,20 @@ namespace piratechess_lib
                     return;
                 }
                 ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
-                string? pgn = game?.Game?.GeneratePGN(AllKeyMovesTraining, NoTrainingMove);
+                string? pgn;
+                try
+                {
+                    pgn = game?.Game?.GeneratePGN(AllKeyMovesTraining, NoTrainingMove);
+                }
+                catch (Exception ex)
+                {
+                    // Corrupt move/variation data must not take down the whole course export (in the
+                    // WinForm app an unhandled exception here kills the process). Skip just this line,
+                    // like an empty/broken line JSON above, and say which one in the log.
+                    _errorCount++;
+                    _retryEvent?.Invoke($"[{pgnHeader.Round:000}.{pgnHeader.Subround:000}] skipped, could not build PGN: {ex.GetType().Name}: {ex.Message}");
+                    return;
+                }
 
                 pgnHeader.FEN = game?.Game?.Initial ?? "";
 

@@ -60,7 +60,9 @@ namespace piratechess_lib
             Data ??= [];
             foreach (JsonMove move in Data)
             {
-                sortedMoves.Add(move.Id, move);
+                // Indexer instead of Add: duplicate move ids (corrupt Chessable data) overwrite instead
+                // of throwing an ArgumentException that aborted the whole course export.
+                sortedMoves[move.Id] = move;
 
                 if (move.After is not null and not "")
                 {
@@ -174,8 +176,11 @@ namespace piratechess_lib
                     pendingVariations = "";
                 }
 
-                var arrowList = move.Draws.Where(x => x.Object == "arrow").ToList();
-                var circleList = move.Draws.Where(x => x.Object == "circle").ToList();
+                // Chessable can send "draws": null or single null entries in the list; the
+                // property pattern filters null elements out as well (NullReferenceException in
+                // GeneratePGN, same fix as in piratechess_docker for bid 282212).
+                var arrowList = move.Draws?.Where(x => x is { Object: "arrow" }).ToList() ?? [];
+                var circleList = move.Draws?.Where(x => x is { Object: "circle" }).ToList() ?? [];
 
                 string annotation = "";
 
@@ -185,7 +190,7 @@ namespace piratechess_lib
                     var firstrun = true;
                     foreach (JsonDraw draw in arrowList)
                     {
-                        annotation += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}{draw.End}";
+                        annotation += $"{(firstrun ? "" : ",")}{(draw.Color ?? "").ToUpper()}{draw.Start}{draw.End}";
                         firstrun = false;
                     }
                     annotation += "]";
@@ -197,7 +202,7 @@ namespace piratechess_lib
                     var firstrun = true;
                     foreach (JsonDraw draw in circleList)
                     {
-                        annotation += $"{(firstrun ? "" : ",")}{draw.Color.ToUpper()}{draw.Start}";
+                        annotation += $"{(firstrun ? "" : ",")}{(draw.Color ?? "").ToUpper()}{draw.Start}";
                         firstrun = false;
                     }
                     annotation += "]";
@@ -307,7 +312,7 @@ namespace piratechess_lib
 
         private static Move? SanToMove(ChessGame game, string san)
         {
-            string s = san.TrimEnd('+', '#', '!', '?');
+            string s = (san ?? string.Empty).TrimEnd('+', '#', '!', '?');
             int backRank = game.WhoseTurn == Player.White ? 1 : 8;
 
             if (s is "O-O" or "0-0")
@@ -317,7 +322,11 @@ namespace piratechess_lib
 
             char? promo = null;
             int eqIdx = s.IndexOf('=');
-            if (eqIdx >= 0) { promo = s[eqIdx + 1]; s = s[..eqIdx]; }
+            if (eqIdx >= 0) { promo = eqIdx + 1 < s.Length ? s[eqIdx + 1] : (char?)null; s = s[..eqIdx]; }
+
+            // Insufficient/empty notation (e.g. only a move number left): not a valid move, return
+            // null instead of an IndexOutOfRangeException on s[^2] that aborted the whole course.
+            if (s.Length < 2) return null;
 
             var destFile = (ChessDotNet.File)(char.ToLower(s[^2]) - 'a');
             int destRank = s[^1] - '0';
