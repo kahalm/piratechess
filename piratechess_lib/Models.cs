@@ -461,6 +461,12 @@ namespace piratechess_lib
             comment = comment.Replace("</bold>", "").Replace("<bold>", "");
             comment = findHtmltags().Replace(comment, "");
 
+            // Neutralise curly braces from the Chessable text: the comment is later wrapped in {…},
+            // and a "}" inside it would end the comment early and dump the rest into the movetext.
+            // PGN has no escaping inside {…}, so use round brackets (they appear there anyway, see
+            // @@StartBracket@@ above).
+            comment = comment.Replace('{', '(').Replace('}', ')');
+
             return comment;
         }
 

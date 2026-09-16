@@ -250,6 +250,22 @@ namespace piratechess_lib
             return coursename;
         }
 
+        /// <summary>
+        /// Makes a chapter or line name safe as a PGN tag value. Event/White/Black come raw from
+        /// Chessable: a <c>"</c> in the name (e.g. <c>The "Catalan" Setup</c>) would end the tag in the
+        /// middle of the value, and ChessBase reads the name wrong or rejects the game. The PGN spec
+        /// escapes <c>\</c> and <c>"</c> with a backslash; line breaks are not allowed in a tag at all.
+        /// </summary>
+        public static string EscapeHeader(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            return value
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", " ")
+                .Replace("\n", " ");
+        }
+
         private void GetLine(JsonSerializerOptions caseInvariant, PgnInfo pgnHeader, string oid, RestResponseChapter? restResponseChapter, int lineCounter, bool useLocalData = false, string json = "")
         {
             string? content = null;
@@ -363,11 +379,11 @@ namespace piratechess_lib
 
                 _ = (_pgn?.Append($"""
                         
-                        [Event "{pgnHeader.Event}"]
+                        [Event "{EscapeHeader(pgnHeader.Event)}"]
                         [Round "{pgnHeader.Round:000}.{pgnHeader.Subround:000}"]
-                        [White "{pgnHeader.White}"]
-                        [Black "{pgnHeader.Black}"]
-                        [FEN "{pgnHeader.FEN}"]
+                        [White "{EscapeHeader(pgnHeader.White)}"]
+                        [Black "{EscapeHeader(pgnHeader.Black)}"]
+                        [FEN "{EscapeHeader(pgnHeader.FEN)}"]
                         [Result "*"]
 
                         {pgn}
