@@ -87,7 +87,9 @@ namespace piratechess_lib
                             }
                             else if (data.Key == "V")
                             {
-                                string v = data.GetVariationPgn();
+                                // Branch point of the variation = position BEFORE this move (an
+                                // alternative to it). Chessable's "before" holds exactly that FEN.
+                                string v = data.GetVariationPgn(responseMoveAfter.Before);
                                 if (v != "") variations.Add(v);
                             }
                         }
@@ -163,7 +165,6 @@ namespace piratechess_lib
             }
 
             int lastMove = 0;
-            string pendingVariations = "";
             foreach (JsonMove move in sortedMoves.Values)
             {
                 if (move.CommentBefore != "")
@@ -176,12 +177,6 @@ namespace piratechess_lib
                     pgn += $"{move.Move}. ";
                 }
                 pgn += move.San + " ";
-
-                if (pendingVariations != "")
-                {
-                    pgn += pendingVariations + " ";
-                    pendingVariations = "";
-                }
 
                 // Chessable can send "draws": null or single null entries in the list; the
                 // property pattern filters null elements out as well (NullReferenceException in
@@ -225,16 +220,15 @@ namespace piratechess_lib
                     pgn += $"{{{annotation}}} ";
                 }
 
+                // Emit variations right AFTER their own move (they are alternatives to it), not after
+                // the following move. Otherwise a PGN reader attaches them to the wrong move and, for
+                // a move of the other colour, rejects them as illegal.
                 if (move.CommentVariations != "")
                 {
-                    pendingVariations = move.CommentVariations;
+                    pgn += move.CommentVariations + " ";
                 }
 
                 lastMove = move.Move;
-            }
-            if (pendingVariations != "")
-            {
-                pgn += pendingVariations + " ";
             }
             return pgn;
         }
@@ -317,7 +311,7 @@ namespace piratechess_lib
             return null;
         }
 
-        private static Move? SanToMove(ChessGame game, string san)
+        internal static Move? SanToMove(ChessGame game, string san)
         {
             string s = (san ?? string.Empty).TrimEnd('+', '#', '!', '?');
             int backRank = game.WhoseTurn == Player.White ? 1 : 8;
@@ -513,76 +507,163 @@ namespace piratechess_lib
             }
         }
 
-        public string GetVariationPgn()
+        /// <summary>
+        /// Turns the Chessable "V" data of a move into PGN. Chessable's "V" holds TWO kinds of items:
+        /// (a) real sidelines that branch off at the parent move and replay legally, and
+        /// (b) transposition or reference notes with absolute move numbers from move 1 that do NOT
+        /// continue from here. Emitting both blindly as <c>(…)</c> produced invalid PGN that could not
+        /// be replayed (duplicates, foreign move numbers, null moves "--").
+        ///
+        /// Two stages: the items are split into clusters (single alternative lines) wherever the move
+        /// number jumps back, and EACH cluster is replayed with the engine from the parent position
+        /// (<paramref name="branchFen"/> = position BEFORE the parent move). If it replays legally it
+        /// becomes a real <c>(…)</c> variation, otherwise (illegal move, null move, unknown FEN) it is
+        /// written as a <c>{comment}</c>, so the PGN stays valid and the content is kept.
+        /// </summary>
+        public string GetVariationPgn(string branchFen)
         {
             if (Key != "V" || Val == null || Val.Value.ValueKind != JsonValueKind.Array)
                 return "";
 
             var innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions()) ?? [];
-            var variations = new List<string>();
-            var sb = new StringBuilder("(");
-            string pendingComment = "";
-            int lastWhiteMoveNum = 0;
 
+            // ---- Stage 1: split into clusters (alternative lines) ----
+            var clusters = new List<List<JsonMoveItemList>>();
+            var cur = new List<JsonMoveItemList>();
+            int lastOrder = int.MinValue;
             foreach (var item in innerList)
             {
-                if (item.Key == "S" && item.Val != null && item.Val.Value.ValueKind == JsonValueKind.String)
+                if (item.Key == "S")
                 {
-                    string san = item.Val.Value.GetString() ?? "";
-                    var m = findWhiteMoveNumber().Match(san);
-                    if (m.Success)
+                    string raw = (item.Val?.ValueKind == JsonValueKind.String ? item.Val.Value.GetString() : "") ?? "";
+                    int? ord = MoveOrder(raw);
+                    if (ord.HasValue)
                     {
-                        int moveNum = int.Parse(m.Groups[1].Value);
-                        if (moveNum <= lastWhiteMoveNum)
+                        if (ord.Value <= lastOrder && cur.Count > 0)
                         {
-                            // New alternative line — close current variation and start a new one
-                            if (pendingComment != "")
-                            {
-                                sb.Append($"{{{pendingComment}}}");
-                                pendingComment = "";
-                            }
-                            variations.Add(sb.ToString().TrimEnd() + ")");
-                            sb = new StringBuilder("(");
-                            lastWhiteMoveNum = 0;
+                            clusters.Add(cur);
+                            cur = [];
+                            lastOrder = int.MinValue;
                         }
-                        lastWhiteMoveNum = moveNum;
+                        lastOrder = ord.Value;
                     }
+                }
+                cur.Add(item);
+            }
+            if (cur.Count > 0) clusters.Add(cur);
 
-                    if (pendingComment != "")
-                    {
-                        sb.Append($"{{{pendingComment}}} ");
-                        pendingComment = "";
-                    }
-                    sb.Append(san);
-                    sb.Append(' ');
-                }
-                else if (item.Key == "C")
+            // ---- Stage 2: replay each cluster, then variation or comment ----
+            var parts = new List<string>();
+            foreach (var cluster in clusters)
+            {
+                ChessGame? game = TryNewGame(branchFen);
+                var body = new StringBuilder();         // valid variation notation
+                var rawText = new StringBuilder();       // plain-text fallback (comment)
+                bool anyMove = false, legal = true, hasNull = false;
+
+                foreach (var item in cluster)
                 {
-                    string c = item.CommentAfter;
-                    if (c != "")
-                        pendingComment += (pendingComment != "" ? " " : "") + c;
-                }
-                else if (item.Key == "V")
-                {
-                    if (pendingComment != "")
+                    if (item.Key == "C")
                     {
-                        sb.Append($"{{{pendingComment}}} ");
-                        pendingComment = "";
+                        string c = item.CommentAfter;
+                        if (c != "") { body.Append($"{{{c}}} "); AppendText(rawText, c); }
                     }
-                    sb.Append(item.GetVariationPgn());
-                    sb.Append(' ');
+                    else if (item.Key == "V")
+                    {
+                        // Nested variation: embed as plain text (valid and simple).
+                        string nested = item.FlattenToText();
+                        if (nested != "") { body.Append($"{{{nested}}} "); AppendText(rawText, nested); }
+                    }
+                    else if (item.Key == "S")
+                    {
+                        string raw = ((item.Val?.ValueKind == JsonValueKind.String ? item.Val.Value.GetString() : "") ?? "").Trim();
+                        if (raw == "") continue;
+                        anyMove = true;
+                        AppendText(rawText, raw);
+                        if (raw.Contains("--")) { hasNull = true; continue; }
+                        if (game != null && legal && !hasNull)
+                        {
+                            var mv = Game.SanToMove(game, StripMoveNumber(raw));
+                            if (mv != null)
+                            {
+                                try { game.MakeMove(mv, false); body.Append(raw + " "); }
+                                catch { legal = false; }
+                            }
+                            else legal = false;
+                        }
+                    }
+                }
+
+                if (anyMove && legal && !hasNull)
+                {
+                    string b = body.ToString().Trim();
+                    if (b != "") parts.Add($"({b})");
+                }
+                else
+                {
+                    string t = rawText.ToString().Trim();
+                    if (t != "") parts.Add($"{{{t}}}");
                 }
             }
+            return string.Join(" ", parts);
+        }
 
-            if (pendingComment != "")
-                sb.Append($"{{{pendingComment}}}");
+        /// <summary>Flattens a (nested) "V" structure to plain text (moves and comments, no brackets, no FEN context).</summary>
+        private string FlattenToText()
+        {
+            if (Val == null || Val.Value.ValueKind != JsonValueKind.Array) return "";
+            var list = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions()) ?? [];
+            var sb = new StringBuilder();
+            foreach (var it in list)
+            {
+                if (it.Key == "S")
+                {
+                    string s = ((it.Val?.ValueKind == JsonValueKind.String ? it.Val.Value.GetString() : "") ?? "").Trim();
+                    if (s != "") AppendText(sb, s);
+                }
+                else if (it.Key == "C") { string c = it.CommentAfter; if (c != "") AppendText(sb, c); }
+                else if (it.Key == "V") { string n = it.FlattenToText(); if (n != "") AppendText(sb, n); }
+            }
+            return sb.ToString().Trim();
+        }
 
-            variations.Add(sb.ToString().TrimEnd() + ")");
-            return string.Join(" ", variations);
+        private static ChessGame? TryNewGame(string? fen)
+        {
+            try { return string.IsNullOrWhiteSpace(fen) ? new ChessGame() : new ChessGame(fen); }
+            catch { return null; }
+        }
+
+        /// <summary>Sort key of an "N." / "N..." move token (white = N*2, black = N*2+1); null for a bare SAN.</summary>
+        private static int? MoveOrder(string raw)
+        {
+            var mw = findWhiteMoveNumber().Match(raw);
+            if (mw.Success) return int.Parse(mw.Groups[1].Value) * 2;
+            var mb = findBlackMoveNumber().Match(raw);
+            if (mb.Success) return int.Parse(mb.Groups[1].Value) * 2 + 1;
+            return null;
+        }
+
+        /// <summary>Strips the leading move number ("12." / "12...") from a token; a bare SAN stays as is.</summary>
+        private static string StripMoveNumber(string raw)
+        {
+            var m = findLeadingMoveNumber().Match(raw);
+            return m.Success ? raw[m.Length..].Trim() : raw.Trim();
+        }
+
+        private static void AppendText(StringBuilder sb, string s)
+        {
+            if (sb.Length > 0) sb.Append(' ');
+            sb.Append(s);
         }
 
         [GeneratedRegex(@"^(\d+)\.(?!\.)")]
         private static partial Regex findWhiteMoveNumber();
+
+        [GeneratedRegex(@"^(\d+)\.\.\.")]
+        private static partial Regex findBlackMoveNumber();
+
+        [GeneratedRegex(@"^\d+\.(\.\.)?\s*")]
+        private static partial Regex findLeadingMoveNumber();
 
         [GeneratedRegex("<[^>]*>")]
         private static partial Regex findHtmltags();

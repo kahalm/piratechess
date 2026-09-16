@@ -62,9 +62,9 @@ Chessable API  →  PirateChessLib.GetCourse()  →  Game.GeneratePGN()  →  *.
 - `Game.GeneratePGN()` — converts `JsonMove` list to PGN string including:
   - ChessBase arrow/circle annotations: `[%cal ...]` / `[%csl ...]`
   - ChessBase training quiz at first key move: `{[%tqu "En","find the move","","","<uci>","",10]}`
-  - Nested variation lines `(...)`
+  - Variations `(...)` right after the move they are an alternative to; only clusters that replay legally from that position, everything else as `{comment}`
 - `Game.GetFirstKeyMoveUci()` — uses `ChessDotNet` to convert SAN of first `IsKey` move to UCI (e.g. `e2e4`)
-- `JsonMoveItemList.GetVariationPgn()` — recursively builds PGN variation strings
+- `JsonMoveItemList.GetVariationPgn(branchFen)` — splits Chessable "V" items into clusters at move-number jumps and replays each from `branchFen` (= `ResponseMove.Before`, the position before the parent move). Legal → `(…)`, illegal / null move `--` / transposition note → `{…}`. Nested V are flattened to text
 
 **`Options.cs`** — `Options.GetOptions()` (shared `JsonSerializerOptions` with `PropertyNameCaseInsensitive`) and `PgnInfo` (PGN header struct). Note: there is a separate `piratechess_Winform.Options` class (INI key constants) — these are unrelated despite the same name.
 
