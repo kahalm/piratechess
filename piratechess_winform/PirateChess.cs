@@ -174,6 +174,14 @@ namespace piratechess_Winform
                             File.WriteAllText(Path.Combine(pgnDir, safeName + ".pgn"), pgn ?? "");
                             File.WriteAllText(Path.Combine(rawDir, safeName + ".restResponse"),
                                 JsonSerializer.Serialize(_pirate.restResponseCourse));
+                            if (_pirate.ErrorDetails.Count > 0)
+                            {
+                                // Full stack traces of skipped lines, next to the raw response: both
+                                // together are what a bug report needs.
+                                string errorFile = Path.Combine(rawDir, safeName + ".errors.txt");
+                                File.WriteAllText(errorFile, string.Join(Environment.NewLine + Environment.NewLine, _pirate.ErrorDetails));
+                                AppendLog($"Details of skipped lines saved to {errorFile}");
+                            }
                         }
                     }
                 }

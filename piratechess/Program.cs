@@ -65,6 +65,7 @@ foreach (string file in files)
         lib.SetChapterCounterEvent(c => Console.Write($"\r  [{label}] Chapter {c}   "));
         lib.SetLineCounterEvent(l => Console.Write($"\r  [{label}] Line {l}        "));
         lib.SetCumulativeLinesEvent(t => Console.Write($"\r  [{label}] Total lines: {t}   "));
+        lib.SetRetryEvent(msg => Console.WriteLine($"\n  [{label}] {msg}"));
 
         var (pgn, coursename) = lib.GetCourse("", useLocalData: true);
         Console.WriteLine();

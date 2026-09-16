@@ -12,12 +12,20 @@ namespace piratechess_lib
         private Action<string>? _lineCounterEvent;
         private Action<string>? _cumulativeLinesEvent;
         private Action<string>? _retryEvent;
+        private Action<string>? _errorDiagEvent;
+        private readonly List<string> _errorDetails = new();
+        private const int MaxErrorDetails = 100;
         private readonly StringBuilder _pgn = new();
         private string _bearer = string.Empty;
         private string _uid = string.Empty;
 
         public RestResponseCourse? restResponseCourse { get; set; }
         public int ErrorCount => _errorCount;
+        /// <summary>Details, including the full stack trace, of every line or chapter that was
+        /// skipped while parsing. These exceptions are swallowed on purpose (one broken line must
+        /// not abort the whole course), so without this list they would vanish without a trace.
+        /// Reset at the start of each <see cref="GetCourse"/> run.</summary>
+        public IReadOnlyList<string> ErrorDetails => _errorDetails;
         public bool AllKeyMovesTraining { get; set; } = false;
         public bool NoTrainingMove { get; set; } = false;
         public bool AddMoveToEmptyChapters { get; set; } = false;
@@ -61,6 +69,7 @@ namespace piratechess_lib
         {
             _cumLines = 0;
             _errorCount = 0;
+            _errorDetails.Clear();
             string? content = null;
             string coursename = string.Empty;
 
@@ -262,6 +271,7 @@ namespace piratechess_lib
 
             if (content != null)
             {
+                string lineRef = $"{pgnHeader.Round:000}.{pgnHeader.Subround:000}";
                 if (!useLocalData)
                 {
                     restResponseChapter?.ResponseLineList.Add(new RestResponseLine
@@ -287,9 +297,9 @@ namespace piratechess_lib
                 {
                     // Corrupt move/variation data must not take down the whole course export (in the
                     // WinForm app an unhandled exception here kills the process). Skip just this line,
-                    // like an empty/broken line JSON above, and say which one in the log.
+                    // like an empty/broken line JSON above; RecordError keeps the full stack trace.
                     _errorCount++;
-                    _retryEvent?.Invoke($"[{pgnHeader.Round:000}.{pgnHeader.Subround:000}] skipped, could not build PGN: {ex.GetType().Name}: {ex.Message}");
+                    RecordError($"[{lineRef}] GeneratePGN skipped (corrupt move or variation data)", ex, content);
                     return;
                 }
 
@@ -393,6 +403,37 @@ namespace piratechess_lib
         public void SetRetryEvent(Action<string> retryEvent)
         {
             _retryEvent = retryEvent;
+        }
+
+        /// <summary>Diagnostics callback for skipped lines and chapters. Fires once per swallowed
+        /// parser exception with context and the full stack trace.</summary>
+        public void SetErrorDiagEvent(Action<string> errorDiagEvent)
+        {
+            _errorDiagEvent = errorDiagEvent;
+        }
+
+        private void RecordError(string context, Exception? ex = null, string? snippet = null)
+        {
+            // Short form for the GUI log (the retry event is the log channel of both GUIs).
+            _retryEvent?.Invoke(ex == null ? context : $"{context}: {ex.GetType().Name}: {ex.Message}");
+
+            var sb = new StringBuilder(context);
+            if (!string.IsNullOrEmpty(snippet))
+            {
+                var trimmed = snippet.Length > 300 ? snippet.Substring(0, 300) + "…" : snippet;
+                sb.Append(" | snippet: ").Append(trimmed.Replace('\n', ' ').Replace('\r', ' '));
+            }
+            if (ex != null)
+            {
+                sb.Append(" | ").Append(ex.GetType().Name).Append(": ").Append(ex.Message);
+                sb.Append('\n').Append(ex.StackTrace);
+            }
+            var detail = sb.ToString();
+            if (_errorDetails.Count < MaxErrorDetails)
+            {
+                _errorDetails.Add(detail);
+            }
+            _errorDiagEvent?.Invoke(detail);
         }
 
         public string ExtractUid(string jwt)

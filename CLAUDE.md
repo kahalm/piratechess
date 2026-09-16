@@ -75,7 +75,8 @@ Chessable API  →  PirateChessLib.GetCourse()  →  Game.GeneratePGN()  →  *.
 - `GetCourse(bid, lines, useLocalData)` → `GetChapter()` → `GetLine()` — full pipeline
 - `SleepBetweenCalls()` — sleeps 500–1500ms randomly between API calls, plus a user-configurable extra delay drawn from `ExtraDelayMinMs`..`ExtraDelayMaxMs` (both default 0, negative values clamped to 0, bounds swapped if max < min); `GetLine()` retries up to 10× with 30s sleep on empty response
 - `restResponseCourse` property — the full course cache
-- Progress callbacks: `SetChapterCounterEvent`, `SetLineCounterEvent`, `SetCumulativeLinesEvent`, `SetRetryEvent`
+- Progress callbacks: `SetChapterCounterEvent`, `SetLineCounterEvent`, `SetCumulativeLinesEvent`, `SetRetryEvent` (the GUIs use the retry event as their log channel)
+- Skipped lines/chapters are never silent: `RecordError()` writes a one-line message to the retry event, keeps the full detail with stack trace in `ErrorDetails` (reset per `GetCourse`, max 100) and fires `SetErrorDiagEvent`
 
 ### Training Modes
 
@@ -122,7 +123,7 @@ extraDelayMaxMs=0          ; same, upper bound (0/0 = built-in delay only)
 - `Ini.cs` — `INIFileHandler` class for reading/writing `settings.ini`
 - `Options.cs` — INI key constants, not the lib `Options` class. The numbering has gaps (`key2`/`key4`/`key5` were the removed login settings)
 - `Testdata.cs` — test/sample data
-- WinForm auto-export: when batch-exporting multiple courses, saves both `.pgn` and `.restResponse` files to the selected export folder
+- WinForm auto-export: when batch-exporting multiple courses, saves both `.pgn` and `.restResponse` files to the selected export folder, plus `<course>.errors.txt` next to the raw response when `ErrorDetails` is not empty
 
 ### MAUI-Specific (`piratechess_maui/`)
 

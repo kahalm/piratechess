@@ -49,7 +49,7 @@ Steps to use the program:
 * you can now save (in the winform-version) the raw Response from the server and load it again - this way you have to hit the server only once. if anything is not working just send me an email or open a issue and attach the rrf (.restResponse) file - that way I can debug the Problem without needing the course itself.
   This is also helpfull if I build a new version as reading the local restResponsenses is MUCH faster (bigger courses take ~1 hour to load due to server limitations as I don't want to pull too fast and even with my delay I am regularly hitting some Server limits).
 
-* If you select multiple courses it automaticly saves rawresponse and pgn
+* If you select multiple courses it automaticly saves rawresponse and pgn. If lines had to be skipped because Chessable sent broken data, an `.errors.txt` with the details lands next to the rawresponse. Please attach both to a bug report.
 
 * **Extra delay**: between two server calls the program already waits a random 500-1500 ms. In the Settings box (Winform) resp. the "Extra delay between calls (ms)" fields (Maui) you can add your own extra wait on top of that, as a random value between your min and max. Both values are milliseconds and must be positive; 0/0 means only the built-in delay. Raise it if you still hit server limits, but keep in mind that every step adds up over a whole course.
 
