@@ -53,15 +53,22 @@ namespace piratechess_lib
         public string Initial { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
         public int IsInfo { get; set; }
+        /// <summary>Number of colliding move ids in the last <see cref="GeneratePGN"/> run (corrupt
+        /// Chessable data, the last move per id wins). Above 0 the PGN may be missing real moves, so
+        /// PirateChessLib.GetLine reports it instead of passing it off as a clean export.</summary>
+        public int DuplicateMoveIds { get; private set; }
         public string GeneratePGN(bool allKeyMovesTraining = false, bool noTrainingMove = false)
         {
             string pgn = "";
             SortedList<int, JsonMove> sortedMoves = [];
             Data ??= [];
+            DuplicateMoveIds = 0;
             foreach (JsonMove move in Data)
             {
                 // Indexer instead of Add: duplicate move ids (corrupt Chessable data) overwrite instead
-                // of throwing an ArgumentException that aborted the whole course export.
+                // of throwing an ArgumentException that aborted the whole course export. Count them,
+                // so the silent loss of a move becomes visible to the caller.
+                if (sortedMoves.ContainsKey(move.Id)) DuplicateMoveIds++;
                 sortedMoves[move.Id] = move;
 
                 if (move.After is not null and not "")

@@ -326,6 +326,14 @@ namespace piratechess_lib
                     RecordError($"[{lineRef}] GeneratePGN skipped (corrupt move or variation data)", ex, content);
                     return;
                 }
+                // GeneratePGN tolerates duplicate move ids (last one wins). The line stays in the
+                // export, but the possible loss of a move must not go unnoticed.
+                int dupIds = game?.Game?.DuplicateMoveIds ?? 0;
+                if (dupIds > 0)
+                {
+                    _errorCount++;
+                    RecordError($"[{lineRef}] Duplicate move ids in line ({dupIds}), last move per id kept, PGN may be incomplete", null, content);
+                }
 
                 pgnHeader.FEN = game?.Game?.Initial ?? "";
 
