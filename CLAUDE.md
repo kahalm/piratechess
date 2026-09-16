@@ -94,6 +94,8 @@ The CLI generates **all three variants** per `.restResponse` and saves them as `
 ### PGN Format Details
 
 - Round header format: `{chapterCounter+1:000}.{lineCount+1:000}` where both counters are already 1-based — effectively `arrayIndex+2` (e.g. ChapterList[0] line 0 → `"002.002"`)
+- Move numbers follow Chessable's own PGN export: `N.` before white moves, `N...` before a black move that starts the line or follows variations (not after a plain comment)
+- Comment text is whitespace-normalised (`<br/>` paragraphs, removed FEN markers); the parts of one entry are joined with spaces
 - `JsonMove.IsKey = true` marks the first move the user must find (puzzle start)
 - UCI for training annotations is computed by `SanToMove()` which replays moves on a `ChessGame` instance using `GetValidMoves()` and SAN matching — **not** via `PgnReader`
 - Chessable HTML annotation tokens stripped by `ReplaceCommentStuff()`: `@@StartBracket@@`/`@@EndBracket@@` → `()`; `@@StartFEN@@...@@EndFEN@@` → removed; `@@StartBlockQuote@@`, `@@LinkStart@@`, `@@SANStart@@`, `@@HeaderStart@@` → removed (along with their `@@End...@@` counterparts); HTML tags via regex
