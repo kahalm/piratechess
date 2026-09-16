@@ -352,6 +352,20 @@ namespace piratechess_lib
                         ? new Move(vm.OriginalPosition, vm.NewPosition, game.WhoseTurn, promo.Value)
                         : vm;
                 }
+                // ChessDotNet 1.0.0 does not list straight pawn-push promotions (e.g. "e8=Q") in
+                // GetValidMoves, capture promotions it does. Without this the key move got no UCI and
+                // the rest of the training moves in the line broke off. Build the push directly:
+                // origin = same file, one rank behind the target. The promotion rank must match the
+                // side to move (white 8, black 1); a colour-blind check computed rank 0 or 9 for
+                // corrupt variation data and GetPieceAt threw IndexOutOfRangeException.
+                bool promRank = game.WhoseTurn == Player.White ? destRank == 8 : destRank == 1;
+                if (promo.HasValue && !srcFile.HasValue && promRank)
+                {
+                    int originRank = game.WhoseTurn == Player.White ? destRank - 1 : destRank + 1;
+                    var origin = new Position(destFile, originRank);
+                    if (game.GetPieceAt(origin) is Pawn)
+                        return new Move(origin, new Position(destFile, destRank), game.WhoseTurn, promo.Value);
+                }
                 return null;
             }
 
