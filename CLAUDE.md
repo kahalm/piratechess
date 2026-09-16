@@ -72,7 +72,7 @@ Chessable API  →  PirateChessLib.GetCourse()  →  Game.GeneratePGN()  →  *.
 
 **`PirateChessLib.cs`** — API orchestration:
 - `LoginWithBearer(jwt)` — sets bearer + extracts UID from JWT. Email/password login was removed: Chessable blocks the API login behind Cloudflare, so the JWT bearer is the only way in.
-- `GetCourse(bid, lines, useLocalData)` → `GetChapter()` → `GetLine()` — full pipeline
+- `GetCourse(bid, lines, useLocalData)` → `GetChapter()` → `GetLine()` — full pipeline. Each call resets the PGN buffer, counters and `ErrorDetails`, so one instance can export several courses in a row
 - `SleepBetweenCalls()` — sleeps 500–1500ms randomly between API calls, plus a user-configurable extra delay drawn from `ExtraDelayMinMs`..`ExtraDelayMaxMs` (both default 0, negative values clamped to 0, bounds swapped if max < min); `GetLine()` retries up to 10× with 30s sleep on empty response
 - `restResponseCourse` property — the full course cache
 - Progress callbacks: `SetChapterCounterEvent`, `SetLineCounterEvent`, `SetCumulativeLinesEvent`, `SetRetryEvent` (the GUIs use the retry event as their log channel)

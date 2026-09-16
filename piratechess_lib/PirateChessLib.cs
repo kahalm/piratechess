@@ -67,6 +67,9 @@ namespace piratechess_lib
 
         public (string, string) GetCourse(string bid, int lines = 10000, bool useLocalData = false)
         {
+            // Every run starts empty. The WinForm batch export reuses one instance for all courses;
+            // without this each course file also contained every course exported before it.
+            _pgn.Clear();
             _cumLines = 0;
             _errorCount = 0;
             _errorDetails.Clear();
