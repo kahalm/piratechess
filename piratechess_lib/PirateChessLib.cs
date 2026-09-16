@@ -193,7 +193,20 @@ namespace piratechess_lib
                     _errorCount++;
                     return coursename;
                 }
-                ResponseChapter responseChapter = JsonSerializer.Deserialize<ResponseChapter>(content, options: caseInvariant) ?? new ResponseChapter();
+                ResponseChapter responseChapter;
+                try
+                {
+                    responseChapter = JsonSerializer.Deserialize<ResponseChapter>(content, options: caseInvariant) ?? new ResponseChapter();
+                }
+                catch (JsonException ex)
+                {
+                    // A truncated or corrupt chapter body (e.g. a download that broke off mid-stream)
+                    // is not empty, so it slips past the check above. Skip it like an empty one
+                    // instead of letting the whole course export crash.
+                    _errorCount++;
+                    RecordError($"[{chapter + 1:000}] Chapter JSON skipped (corrupt or truncated)", ex, content);
+                    return coursename;
+                }
                 coursename = responseChapter.List.Name;
                 int count = 0;
 
@@ -287,7 +300,18 @@ namespace piratechess_lib
                     _errorCount++;
                     return;
                 }
-                ResponseLine? game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
+                ResponseLine? game;
+                try
+                {
+                    game = JsonSerializer.Deserialize<ResponseLine>(content, options: caseInvariant);
+                }
+                catch (JsonException ex)
+                {
+                    // Same as for the chapter: one truncated line must not kill the whole course.
+                    _errorCount++;
+                    RecordError($"[{lineRef}] Line JSON skipped (corrupt or truncated)", ex, content);
+                    return;
+                }
                 string? pgn;
                 try
                 {
