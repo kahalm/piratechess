@@ -67,7 +67,17 @@ foreach (string file in files)
         lib.SetCumulativeLinesEvent(t => Console.Write($"\r  [{label}] Total lines: {t}   "));
         lib.SetRetryEvent(msg => Console.WriteLine($"\n  [{label}] {msg}"));
 
-        var (pgn, coursename) = lib.GetCourse("", useLocalData: true);
+        string pgn, coursename;
+        try
+        {
+            (pgn, coursename) = lib.GetCourse("", useLocalData: true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"  [{label}] ERROR: {ex.Message}");
+            continue;
+        }
         Console.WriteLine();
 
         if (string.IsNullOrEmpty(pgn))

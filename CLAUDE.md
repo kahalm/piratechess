@@ -76,6 +76,7 @@ Chessable API  →  PirateChessLib.GetCourse()  →  Game.GeneratePGN()  →  *.
 - `SleepBetweenCalls()` — sleeps 500–1500ms randomly between API calls, plus a user-configurable extra delay drawn from `ExtraDelayMinMs`..`ExtraDelayMaxMs` (both default 0, negative values clamped to 0, bounds swapped if max < min); `GetLine()` retries up to 10× with 30s sleep on empty response
 - `restResponseCourse` property — the full course cache
 - Progress callbacks: `SetChapterCounterEvent`, `SetLineCounterEvent`, `SetCumulativeLinesEvent`, `SetRetryEvent` (the GUIs use the retry event as their log channel)
+- `GetCourse(useLocalData: true)` throws `InvalidOperationException` when more than 10 lines/chapters fail and more fail than get exported (systematic parser failure instead of a silent stub course). WinForm and CLI catch it and log the message
 - Skipped lines/chapters are never silent: `RecordError()` writes a one-line message to the retry event, keeps the full detail with stack trace in `ErrorDetails` (reset per `GetCourse`, max 100) and fires `SetErrorDiagEvent`
 
 ### Training Modes

@@ -131,6 +131,15 @@ namespace piratechess_lib
                     }
                 }
             }
+            // Guard against SYSTEMATIC failure: single corrupt lines are skipped on purpose (see
+            // GetLine), but when far more lines fail than arrive, that is a parser bug or a broken
+            // cache, not a data problem. Fail loudly instead of returning a stub course as success.
+            // Only for cached data: in the live fetch _errorCount also counts retries, so it would
+            // not be a fair measure there.
+            if (useLocalData && _errorCount > 10 && _errorCount > _cumLines)
+                throw new InvalidOperationException(
+                    $"Course export aborted: {_errorCount} lines/chapters skipped but only {_cumLines} exported. " +
+                    "That points to a systematic parser problem rather than single corrupt lines (see ErrorDetails).");
             return (_pgn.ToString(), coursename);
         }
 

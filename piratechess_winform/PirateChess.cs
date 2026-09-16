@@ -138,9 +138,18 @@ namespace piratechess_Winform
                 var allPgn = new StringBuilder();
                 if (useLocalData)
                 {
-                    (string? pgn, _coursename) = _pirate.GetCourse("", maxLines, useLocalData: true);
-                    allPgn.Append(pgn);
-                    AppendLog($"{_coursename}: {_pirate.ErrorCount} error(s)");
+                    try
+                    {
+                        (string? pgn, _coursename) = _pirate.GetCourse("", maxLines, useLocalData: true);
+                        allPgn.Append(pgn);
+                        AppendLog($"{_coursename}: {_pirate.ErrorCount} error(s)");
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        // Most lines of the raw response failed: show it instead of a stub course.
+                        // Uncaught, the exception would terminate the app from this worker thread.
+                        AppendLog(ex.Message);
+                    }
                 }
                 else
                 {
