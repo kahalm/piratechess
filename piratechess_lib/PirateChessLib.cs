@@ -380,14 +380,24 @@ namespace piratechess_lib
                 _cumLines++;
                 _cumulativeLinesEvent?.Invoke(_cumLines.ToString());
 
+                // Solverfarbe der Linie als Header. Im Repertoire-Modus (NoTrainingMove) steht KEIN
+                // [%tqu] im PGN — ohne diese Angabe weiß ein Leser nicht, ob der erste Zug dem
+                // Trainierenden oder dem GEGNER gehört. Bei Chessables Partie-Kursen gehört er oft dem
+                // Gegner ("10...Sd4, widerlege das"), und wer aus so einem PGN Trainingsaufgaben baut,
+                // stellte sonst die falsche Seite am Zug. Nur die zwei bekannten Werte durchlassen.
+                var lineColor = game?.Game?.Color ?? "";
+                var colorTag = lineColor.Equals("white", StringComparison.OrdinalIgnoreCase)
+                               || lineColor.Equals("black", StringComparison.OrdinalIgnoreCase)
+                    ? $"\n[ChessableColor \"{lineColor.ToLowerInvariant()}\"]" : "";
+
                 _ = (_pgn?.Append($"""
-                        
+
                         [Event "{EscapeHeader(pgnHeader.Event)}"]
                         [Round "{pgnHeader.Round:000}.{pgnHeader.Subround:000}"]
                         [White "{EscapeHeader(pgnHeader.White)}"]
                         [Black "{EscapeHeader(pgnHeader.Black)}"]
                         [FEN "{EscapeHeader(pgnHeader.FEN)}"]
-                        [Result "*"]
+                        [Result "*"]{colorTag}
 
                         {pgn}
 
