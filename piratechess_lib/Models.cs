@@ -663,81 +663,154 @@ namespace piratechess_lib
             }
             if (cur.Count > 0) clusters.Add(cur);
 
-            // ---- Stage 2: replay each cluster, then variation or comment ----
+            // ---- Stage 2: replay each cluster, then variation, sub-variation or comment ----
+            var rendered = new List<RenderedCluster>();   // variations already built from THIS V block
+            var entries = new List<(int Anchor, RenderedCluster? Cluster, string Text)>();
+
             foreach (var cluster in clusters)
             {
-                string rawText = PlainTextOf(cluster);
-                string? body = RenderCluster(cluster, branchFen);
-                int anchor = -1;
+                string firstRaw = cluster
+                    .Where(it => it.Key == "S")
+                    .Select(it => ((it.Val?.ValueKind == JsonValueKind.String ? it.Val.Value.GetString() : "") ?? "").Trim())
+                    .FirstOrDefault(r => r != "") ?? "";
+                int? ord = MoveOrder(firstRaw);
 
-                // Not playable from here? Then look for the position its MOVE NUMBER points at (full move
-                // number AND side to move must match — without that condition a move that happens to be
-                // legal somewhere else would be attached there).
-                if (body == null && anchorFens.Count > 0)
+                int anchor = -1;
+                RenderedCluster? host = null;
+                int hostSpot = -1;
+                RenderedCluster? built = RenderCluster(cluster, branchFen);
+
+                // (1) Not playable from here? Then look for the MAIN LINE position its MOVE NUMBER points
+                // at (full move number AND side to move must match — without that condition a move that
+                // happens to be legal somewhere else would be attached there).
+                if (built == null && ord.HasValue)
                 {
-                    string firstRaw = cluster
-                        .Where(it => it.Key == "S")
-                        .Select(it => ((it.Val?.ValueKind == JsonValueKind.String ? it.Val.Value.GetString() : "") ?? "").Trim())
-                        .FirstOrDefault(r => r != "") ?? "";
-                    int? ord = MoveOrder(firstRaw);
-                    if (ord.HasValue)
+                    for (int a = 0; a < anchorFens.Count; a++)
                     {
-                        for (int a = 0; a < anchorFens.Count; a++)
+                        if (!FenHasOrder(anchorFens[a], ord.Value)) continue;
+                        built = RenderCluster(cluster, anchorFens[a]);
+                        if (built == null) continue;
+                        anchor = a;
+                        break;
+                    }
+                }
+
+                // (2) Otherwise: an alternative to a move INSIDE a previous variation of the same block
+                // ("… 7.f4 7...Be7 … 7...Qb6 is 'best'"). That is where the sentence means it — collected
+                // at the end of the line those pieces read as disconnected fragments.
+                if (built == null && ord.HasValue)
+                {
+                    for (int r = rendered.Count - 1; r >= 0 && built == null; r--)
+                    {
+                        foreach (var spot in rendered[r].Spots)
                         {
-                            if (!FenHasOrder(anchorFens[a], ord.Value)) continue;
-                            body = RenderCluster(cluster, anchorFens[a]);
-                            if (body == null) continue;
-                            anchor = a;
+                            if (spot.Order != ord.Value) continue;
+                            built = RenderCluster(cluster, spot.Fen);
+                            if (built == null) continue;
+                            host = rendered[r];
+                            hostSpot = spot.TokenIndex;
                             break;
                         }
                     }
                 }
 
-                if (body != null) result.Add((anchor, $"({body})"));
-                else if (rawText != "") result.Add((-1, $"{{{rawText}}}"));
+                if (built == null)
+                {
+                    string rawText = PlainTextOf(cluster);
+                    if (rawText != "") entries.Add((-1, null, $"{{{rawText}}}"));
+                    continue;
+                }
+
+                rendered.Add(built);
+                if (host != null) host.AddNested(hostSpot, built);   // written out WITH its host
+                else entries.Add((anchor, built, ""));
             }
+
+            foreach (var (a, c, t) in entries)
+                result.Add((a, c != null ? c.ToPgn() : t));
             return result;
         }
 
-        /// <summary>Replays a cluster from <paramref name="fen"/>; returns the variation body, or null when
-        /// it is not playable from there (illegal move, null move, unknown FEN, no move at all).</summary>
-        private static string? RenderCluster(List<JsonMoveItemList> cluster, string? fen)
+        /// <summary>A built variation: the tokens of its body, the positions BEFORE its moves (anchor points
+        /// for sub-variations) and the sub-variations per move token.</summary>
+        private sealed class RenderedCluster
+        {
+            public List<string> Body { get; } = [];
+            public List<(int Order, string Fen, int TokenIndex)> Spots { get; } = [];
+            private readonly Dictionary<int, List<RenderedCluster>> _nested = [];
+
+            /// <summary>Attaches a sub-variation behind the move <paramref name="moveTokenIndex"/> — and behind
+            /// the comments belonging to that move, otherwise the alternative would sit in mid-sentence.</summary>
+            public void AddNested(int moveTokenIndex, RenderedCluster child)
+            {
+                int at = moveTokenIndex;
+                while (at + 1 < Body.Count && Body[at + 1].StartsWith('{')) at++;
+                if (!_nested.TryGetValue(at, out var list)) _nested[at] = list = [];
+                list.Add(child);
+            }
+
+            public string ToPgn()
+            {
+                var sb = new StringBuilder("(");
+                for (int i = 0; i < Body.Count; i++)
+                {
+                    if (sb.Length > 1) sb.Append(' ');
+                    sb.Append(Body[i]);
+                    if (!_nested.TryGetValue(i, out var kids)) continue;
+                    foreach (var kid in kids) { sb.Append(' '); sb.Append(kid.ToPgn()); }
+                }
+                return sb.Append(')').ToString();
+            }
+        }
+
+        /// <summary>Replays a cluster from <paramref name="fen"/>; returns the built variation, or null when
+        /// it is not playable from there (illegal move, null move, unknown FEN, no move at all). The
+        /// position before every move is kept — sub-variations are anchored at those.</summary>
+        private static RenderedCluster? RenderCluster(List<JsonMoveItemList> cluster, string? fen)
         {
             ChessGame? game = TryNewGame(fen);
             if (game == null) return null;
 
-            var body = new StringBuilder();
+            var rc = new RenderedCluster();
             bool anyMove = false;
             foreach (var item in cluster)
             {
                 if (item.Key == "C")
                 {
                     string c = item.CommentAfter;
-                    if (c != "") body.Append($"{{{c}}} ");
+                    if (c != "") rc.Body.Add($"{{{c}}}");
                 }
                 else if (item.Key == "V")
                 {
                     // Nested variation: embed as plain text (valid and simple).
                     string nested = item.FlattenToText();
-                    if (nested != "") body.Append($"{{{nested}}} ");
+                    if (nested != "") rc.Body.Add($"{{{nested}}}");
                 }
                 else if (item.Key == "S")
                 {
                     string raw = ((item.Val?.ValueKind == JsonValueKind.String ? item.Val.Value.GetString() : "") ?? "").Trim();
                     if (raw == "") continue;
                     if (raw.Contains("--")) return null;
-                    anyMove = true;
+                    string fenBefore = game.GetFen();
+                    rc.Spots.Add((OrderOfFen(fenBefore), fenBefore, rc.Body.Count));
                     var mv = Game.SanToMove(game, StripMoveNumber(raw));
                     if (mv == null) return null;
                     try { game.MakeMove(mv, false); }
                     catch { return null; }
-                    body.Append(raw + " ");
+                    anyMove = true;
+                    rc.Body.Add(raw);
                 }
             }
 
-            if (!anyMove) return null;
-            string b = body.ToString().Trim();
-            return b == "" ? null : b;
+            return anyMove && rc.Body.Count > 0 ? rc : null;
+        }
+
+        /// <summary>Move-number key of a position (<see cref="MoveOrder"/>: white = N*2, black = N*2+1).</summary>
+        private static int OrderOfFen(string fen)
+        {
+            var parts = (fen ?? "").Split(' ');
+            if (parts.Length < 6 || !int.TryParse(parts[5], out int fullmove)) return -1;
+            return fullmove * 2 + (parts[1] == "b" ? 1 : 0);
         }
 
         /// <summary>The cluster as plain text — the fallback when it is not playable anywhere.</summary>
