@@ -57,10 +57,54 @@ namespace piratechess_lib
         /// Chessable data, the last move per id wins). Above 0 the PGN may be missing real moves, so
         /// PirateChessLib.GetLine reports it instead of passing it off as a clean export.</summary>
         public int DuplicateMoveIds { get; private set; }
+        /// <summary>Start position of a game — fallback when the line names no FEN of its own.</summary>
+        private const string StartFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+        /// <summary>Chessable's placeholder for "no move" (introduction lines) — an empty San counts too.</summary>
+        private static bool IsNullSan(string? san) => (san ?? "").Trim() is "" or "--";
+
+        /// <summary>Two comments without a move in between ("} {") — see <see cref="GeneratePGN"/>.</summary>
+        private static readonly Regex CommentGap = new(@"\}\s*\{", RegexOptions.Compiled);
+
+        /// <summary>Board from a FEN without throwing (Chessable also ships pattern diagrams without a king).</summary>
+        private static ChessGame? NewGameOrNull(string? fen)
+        {
+            try { return string.IsNullOrWhiteSpace(fen) ? new ChessGame() : new ChessGame(fen); }
+            catch { return null; }
+        }
+
+        /// <summary>
+        /// Position BEFORE every move of the line — the anchor points for variations (see
+        /// <see cref="JsonMoveItemList.GetVariationParts"/>). Chessable ships them in the "before" of the
+        /// move; where it is missing (the first move of a line often has no "after" object at all) the
+        /// position is replayed from the starting position. What cannot be replayed stays empty — then
+        /// there simply is no fallback anchor for that move.
+        /// </summary>
+        private static List<string> MainlineFens(SortedList<int, JsonMove> moves, Dictionary<int, ResponseMove> afterByMoveId, string? initial)
+        {
+            var fens = new List<string>(moves.Count);
+            ChessGame? game = NewGameOrNull(string.IsNullOrWhiteSpace(initial) ? StartFen : initial);
+            for (int i = 0; i < moves.Count; i++)
+            {
+                string fromJson = afterByMoveId.TryGetValue(moves.Keys[i], out var r) ? (r.Before ?? "") : "";
+                fens.Add(fromJson != "" ? fromJson : (game?.GetFen() ?? ""));
+
+                var move = moves.Values[i];
+                if (game == null) continue;
+                if (IsNullSan(move.San)) { game = null; continue; }   // from here on the position is no longer certain
+                var mv = SanToMove(game, (move.San ?? "").Trim());
+                if (mv == null) { game = null; continue; }
+                try { game.MakeMove(mv, false); }
+                catch { game = null; }
+            }
+            return fens;
+        }
+
         public string GeneratePGN(bool allKeyMovesTraining = false, bool noTrainingMove = false)
         {
             string pgn = "";
             SortedList<int, JsonMove> sortedMoves = [];
+            var afterByMoveId = new Dictionary<int, ResponseMove>();
             Data ??= [];
             DuplicateMoveIds = 0;
             foreach (JsonMove move in Data)
@@ -76,25 +120,11 @@ namespace piratechess_lib
                     ResponseMove? responseMoveAfter = JsonSerializer.Deserialize<ResponseMove>(move.After, options: Options.GetOptions());
                     if (responseMoveAfter != null && responseMoveAfter.Data != null)
                     {
-                        var comments = new List<string>();
-                        var variations = new List<string>();
-                        foreach (var data in responseMoveAfter.Data)
-                        {
-                            if (data.Key == "C")
-                            {
-                                string c = data.CommentAfter;
-                                if (c != "") comments.Add(c);
-                            }
-                            else if (data.Key == "V")
-                            {
-                                // Branch point of the variation = position BEFORE this move (an
-                                // alternative to it). Chessable's "before" holds exactly that FEN.
-                                string v = data.GetVariationPgn(responseMoveAfter.Before);
-                                if (v != "") variations.Add(v);
-                            }
-                        }
-                        move.CommentAfter = string.Join(" ", comments);
-                        move.CommentVariations = string.Join(" ", variations);
+                        afterByMoveId[move.Id] = responseMoveAfter;
+                        move.CommentAfter = string.Join(" ", responseMoveAfter.Data
+                            .Where(d => d.Key == "C")
+                            .Select(d => d.CommentAfter)
+                            .Where(c => c != ""));
                     }
                 }
 
@@ -164,28 +194,67 @@ namespace piratechess_lib
                 }
             }
 
+            // Variations only now, when every position of the line is known: a cluster that cannot be
+            // played from its parent move is attached to the position its MOVE NUMBER points at (see
+            // GetVariationParts). Chessable hangs the reference lines of an introduction on the null move
+            // at the end — unplayable from there, but ordinary variations from move 1 on.
+            var anchorFens = MainlineFens(sortedMoves, afterByMoveId, Initial);
+            var variationsAt = anchorFens.Select(_ => new List<string>()).ToList();
+            for (int i = 0; i < sortedMoves.Count; i++)
+            {
+                if (!afterByMoveId.TryGetValue(sortedMoves.Keys[i], out var resp) || resp.Data == null) continue;
+                foreach (var data in resp.Data.Where(d => d.Key == "V"))
+                {
+                    foreach (var (anchor, part) in data.GetVariationParts(resp.Before ?? "", anchorFens))
+                    {
+                        if (part == "") continue;
+                        variationsAt[anchor >= 0 && anchor < variationsAt.Count ? anchor : i].Add(part);
+                    }
+                }
+            }
+            for (int i = 0; i < sortedMoves.Count; i++)
+                sortedMoves.Values[i].CommentVariations = string.Join(" ", variationsAt[i]);
+
             int lastMove = 0;
             // Move numbers like Chessable's own export: "N." before white, "N..." before black when black
             // starts the line or moves right after variations (otherwise a strict PGN reader cannot place it).
             var initialParts = (Initial ?? "").Split(' ');
             bool blackStarts = initialParts.Length > 1 && initialParts[1] == "b";
-            bool afterVariations = false;
-            foreach (JsonMove move in sortedMoves.Values)
+            // Chessable's NULL MOVE ("--") sits at the END of introduction lines, where no move follows.
+            // It is not written out: chess.js — the PGN reader of RookHub's viewer, move list and
+            // repertoire view — does not know it and silently drops the WHOLE game. Its comments are
+            // kept. Only at the end: with a real move behind it the move sequence would be wrong
+            // without a placeholder (never seen in real data).
+            var trailingNullIds = new HashSet<int>();
+            for (int i = sortedMoves.Count - 1; i >= 0; i--)
             {
+                if (!IsNullSan(sortedMoves.Values[i].San)) break;
+                trailingNullIds.Add(sortedMoves.Keys[i]);
+            }
+
+            bool afterVariations = false;
+            foreach (var moveEntry in sortedMoves)
+            {
+                JsonMove move = moveEntry.Value;
+                bool nullMove = trailingNullIds.Contains(moveEntry.Key);
+
                 if (move.CommentBefore != "")
                 {
                     pgn += $"{{{move.CommentBefore}}} ";
                 }
 
-                if (lastMove < move.Move)
+                if (!nullMove)
                 {
-                    pgn += lastMove == 0 && blackStarts ? $"{move.Move}... " : $"{move.Move}. ";
+                    if (lastMove < move.Move)
+                    {
+                        pgn += lastMove == 0 && blackStarts ? $"{move.Move}... " : $"{move.Move}. ";
+                    }
+                    else if (afterVariations)
+                    {
+                        pgn += $"{move.Move}... ";
+                    }
+                    pgn += move.San + " ";
                 }
-                else if (afterVariations)
-                {
-                    pgn += $"{move.Move}... ";
-                }
-                pgn += move.San + " ";
 
                 // Chessable can send "draws": null or single null entries in the list; the
                 // property pattern filters null elements out as well (NullReferenceException in
@@ -238,8 +307,13 @@ namespace piratechess_lib
                 }
                 afterVariations = move.CommentVariations != "";
 
-                lastMove = move.Move;
+                if (!nullMove) lastMove = move.Move;
             }
+
+            // Merge two comments without a move in between into ONE: chess.js rejects "{a} {b}" and drops
+            // the game, and ChessBase showed nothing after the first block. A "}" cannot come from the
+            // Chessable text (ReplaceCommentStuff replaces curly braces), so the spot is unambiguous.
+            pgn = CommentGap.Replace(pgn, " ");
             return pgn;
         }
 
@@ -536,10 +610,24 @@ namespace piratechess_lib
         /// becomes a real <c>(…)</c> variation, otherwise (illegal move, null move, unknown FEN) it is
         /// written as a <c>{comment}</c>, so the PGN stays valid and the content is kept.
         /// </summary>
-        public string GetVariationPgn(string branchFen)
+        public string GetVariationPgn(string branchFen) =>
+            string.Join(" ", GetVariationParts(branchFen, []).Select(p => p.Pgn));
+
+        /// <summary>
+        /// Like <see cref="GetVariationPgn(string)"/>, but with FALLBACK ANCHORS: when a cluster cannot be
+        /// played from the parent position, the position its MOVE NUMBER points at is used instead
+        /// (<paramref name="anchorFens"/>[i] = position before move i of the line). Those are the
+        /// transposition/reference notes Chessable hangs on the null move at the end of an introduction
+        /// line: unplayable from there, ordinary variations from their own move number on. Without this
+        /// half the introduction ended up as comment text — plain, unclickable text in ChessBase.
+        /// <para>Per cluster: <c>Anchor</c> = index into <paramref name="anchorFens"/> the variation must
+        /// hang on, or -1 for the parent position (also for the comment fallback).</para>
+        /// </summary>
+        public List<(int Anchor, string Pgn)> GetVariationParts(string branchFen, IReadOnlyList<string> anchorFens)
         {
+            var result = new List<(int Anchor, string Pgn)>();
             if (Key != "V" || Val == null || Val.Value.ValueKind != JsonValueKind.Array)
-                return "";
+                return result;
 
             var innerList = JsonSerializer.Deserialize<List<JsonMoveItemList>>(Val.Value, options: Options.GetOptions()) ?? [];
 
@@ -563,65 +651,120 @@ namespace piratechess_lib
                         }
                         lastOrder = ord.Value;
                     }
+                    else if (lastOrder != int.MinValue)
+                    {
+                        // A move WITHOUT a number continues the line and takes the next half-move. Without
+                        // counting it, "… 3.Nc3 a6 … 3...h6" looked like a continuation (7 > 6) although
+                        // "a6" already holds half-move 7 — and the whole block became a comment.
+                        lastOrder++;
+                    }
                 }
                 cur.Add(item);
             }
             if (cur.Count > 0) clusters.Add(cur);
 
             // ---- Stage 2: replay each cluster, then variation or comment ----
-            var parts = new List<string>();
             foreach (var cluster in clusters)
             {
-                ChessGame? game = TryNewGame(branchFen);
-                var body = new StringBuilder();         // valid variation notation
-                var rawText = new StringBuilder();       // plain-text fallback (comment)
-                bool anyMove = false, legal = true, hasNull = false;
+                string rawText = PlainTextOf(cluster);
+                string? body = RenderCluster(cluster, branchFen);
+                int anchor = -1;
 
-                foreach (var item in cluster)
+                // Not playable from here? Then look for the position its MOVE NUMBER points at (full move
+                // number AND side to move must match — without that condition a move that happens to be
+                // legal somewhere else would be attached there).
+                if (body == null && anchorFens.Count > 0)
                 {
-                    if (item.Key == "C")
+                    string firstRaw = cluster
+                        .Where(it => it.Key == "S")
+                        .Select(it => ((it.Val?.ValueKind == JsonValueKind.String ? it.Val.Value.GetString() : "") ?? "").Trim())
+                        .FirstOrDefault(r => r != "") ?? "";
+                    int? ord = MoveOrder(firstRaw);
+                    if (ord.HasValue)
                     {
-                        string c = item.CommentAfter;
-                        if (c != "") { body.Append($"{{{c}}} "); AppendText(rawText, c); }
-                    }
-                    else if (item.Key == "V")
-                    {
-                        // Nested variation: embed as plain text (valid and simple).
-                        string nested = item.FlattenToText();
-                        if (nested != "") { body.Append($"{{{nested}}} "); AppendText(rawText, nested); }
-                    }
-                    else if (item.Key == "S")
-                    {
-                        string raw = ((item.Val?.ValueKind == JsonValueKind.String ? item.Val.Value.GetString() : "") ?? "").Trim();
-                        if (raw == "") continue;
-                        anyMove = true;
-                        AppendText(rawText, raw);
-                        if (raw.Contains("--")) { hasNull = true; continue; }
-                        if (game != null && legal && !hasNull)
+                        for (int a = 0; a < anchorFens.Count; a++)
                         {
-                            var mv = Game.SanToMove(game, StripMoveNumber(raw));
-                            if (mv != null)
-                            {
-                                try { game.MakeMove(mv, false); body.Append(raw + " "); }
-                                catch { legal = false; }
-                            }
-                            else legal = false;
+                            if (!FenHasOrder(anchorFens[a], ord.Value)) continue;
+                            body = RenderCluster(cluster, anchorFens[a]);
+                            if (body == null) continue;
+                            anchor = a;
+                            break;
                         }
                     }
                 }
 
-                if (anyMove && legal && !hasNull)
+                if (body != null) result.Add((anchor, $"({body})"));
+                else if (rawText != "") result.Add((-1, $"{{{rawText}}}"));
+            }
+            return result;
+        }
+
+        /// <summary>Replays a cluster from <paramref name="fen"/>; returns the variation body, or null when
+        /// it is not playable from there (illegal move, null move, unknown FEN, no move at all).</summary>
+        private static string? RenderCluster(List<JsonMoveItemList> cluster, string? fen)
+        {
+            ChessGame? game = TryNewGame(fen);
+            if (game == null) return null;
+
+            var body = new StringBuilder();
+            bool anyMove = false;
+            foreach (var item in cluster)
+            {
+                if (item.Key == "C")
                 {
-                    string b = body.ToString().Trim();
-                    if (b != "") parts.Add($"({b})");
+                    string c = item.CommentAfter;
+                    if (c != "") body.Append($"{{{c}}} ");
                 }
-                else
+                else if (item.Key == "V")
                 {
-                    string t = rawText.ToString().Trim();
-                    if (t != "") parts.Add($"{{{t}}}");
+                    // Nested variation: embed as plain text (valid and simple).
+                    string nested = item.FlattenToText();
+                    if (nested != "") body.Append($"{{{nested}}} ");
+                }
+                else if (item.Key == "S")
+                {
+                    string raw = ((item.Val?.ValueKind == JsonValueKind.String ? item.Val.Value.GetString() : "") ?? "").Trim();
+                    if (raw == "") continue;
+                    if (raw.Contains("--")) return null;
+                    anyMove = true;
+                    var mv = Game.SanToMove(game, StripMoveNumber(raw));
+                    if (mv == null) return null;
+                    try { game.MakeMove(mv, false); }
+                    catch { return null; }
+                    body.Append(raw + " ");
                 }
             }
-            return string.Join(" ", parts);
+
+            if (!anyMove) return null;
+            string b = body.ToString().Trim();
+            return b == "" ? null : b;
+        }
+
+        /// <summary>The cluster as plain text — the fallback when it is not playable anywhere.</summary>
+        private static string PlainTextOf(List<JsonMoveItemList> cluster)
+        {
+            var sb = new StringBuilder();
+            foreach (var item in cluster)
+            {
+                if (item.Key == "C") { string c = item.CommentAfter; if (c != "") AppendText(sb, c); }
+                else if (item.Key == "V") { string n = item.FlattenToText(); if (n != "") AppendText(sb, n); }
+                else if (item.Key == "S")
+                {
+                    string raw = ((item.Val?.ValueKind == JsonValueKind.String ? item.Val.Value.GetString() : "") ?? "").Trim();
+                    if (raw != "") AppendText(sb, raw);
+                }
+            }
+            return sb.ToString().Trim();
+        }
+
+        /// <summary>Does the position match the move number of a token (<see cref="MoveOrder"/>: white = N*2,
+        /// black = N*2+1)? Only the FEN itself is read — full move number and side to move.</summary>
+        private static bool FenHasOrder(string fen, int order)
+        {
+            var parts = (fen ?? "").Split(' ');
+            if (parts.Length < 6) return false;
+            if (!int.TryParse(parts[5], out int fullmove)) return false;
+            return fullmove * 2 + (parts[1] == "b" ? 1 : 0) == order;
         }
 
         /// <summary>Flattens a (nested) "V" structure to plain text (moves and comments, no brackets, no FEN context).</summary>
@@ -668,7 +811,10 @@ namespace piratechess_lib
 
         private static void AppendText(StringBuilder sb, string s)
         {
-            if (sb.Length > 0) sb.Append(' ');
+            // No space before a punctuation mark: the plain text of a cluster is assembled from moves and
+            // text pieces, and a piece starting with "." or "," belongs to the word before it
+            // ("1.d4 . And maybe this is true." -> "1.d4. And maybe this is true.").
+            if (sb.Length > 0 && !(s.Length > 0 && ",.;:!?)".Contains(s[0]))) sb.Append(' ');
             sb.Append(s);
         }
 
