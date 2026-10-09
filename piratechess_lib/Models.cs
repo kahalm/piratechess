@@ -678,7 +678,15 @@ namespace piratechess_lib
                 int anchor = -1;
                 RenderedCluster? host = null;
                 int hostSpot = -1;
-                RenderedCluster? built = RenderCluster(cluster, branchFen);
+
+                // When the first move carries a move number, the parent position must match it — otherwise
+                // the cluster counts as not playable here. Reason: a reference note ("4...Nc6 5.Nc3 …") is
+                // ACCIDENTALLY legal from the parent position (after 1.e4, Nb8-c6 is a valid move) and was
+                // written as a variation showing something entirely different from what the sentence means;
+                // reported 2026-10-09, it sat at the end of the chapter instead of at its own move. Without
+                // a number the parent anchor keeps working as before.
+                bool parentFits = !ord.HasValue || FenHasOrder(branchFen, ord.Value);
+                RenderedCluster? built = parentFits ? RenderCluster(cluster, branchFen) : null;
 
                 // (1) Not playable from here? Then look for the MAIN LINE position its MOVE NUMBER points
                 // at (full move number AND side to move must match — without that condition a move that
@@ -739,12 +747,19 @@ namespace piratechess_lib
             public List<(int Order, string Fen, int TokenIndex)> Spots { get; } = [];
             private readonly Dictionary<int, List<RenderedCluster>> _nested = [];
 
-            /// <summary>Attaches a sub-variation behind the move <paramref name="moveTokenIndex"/> — and behind
-            /// the comments belonging to that move, otherwise the alternative would sit in mid-sentence.</summary>
+            /// <summary>
+            /// Attaches a sub-variation behind the move <paramref name="moveTokenIndex"/>. If another MOVE
+            /// follows, it goes directly behind the move: the comment in between introduces the next move
+            /// ("… a6 {we meet the Kan with} 5.c4"), and pushing the variation into it cuts the sentence in
+            /// half. If the move is the LAST one of the variation, the comment belongs to the alternative
+            /// itself ("… a6 {and even} (3...h6 …)") and the variation goes behind it.
+            /// </summary>
             public void AddNested(int moveTokenIndex, RenderedCluster child)
             {
                 int at = moveTokenIndex;
-                while (at + 1 < Body.Count && Body[at + 1].StartsWith('{')) at++;
+                bool moreMoves = Spots.Any(sp => sp.TokenIndex > moveTokenIndex);
+                if (!moreMoves)
+                    while (at + 1 < Body.Count && Body[at + 1].StartsWith('{')) at++;
                 if (!_nested.TryGetValue(at, out var list)) _nested[at] = list = [];
                 list.Add(child);
             }
